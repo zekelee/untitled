@@ -2,6 +2,10 @@
 
 import useSWR from "swr";
 import { Loader } from "@mantine/core";
+import {
+  IconFlag,
+  IconWorldDollar,
+} from "@tabler/icons-react";
 import styles from "./deal-dashboard.module.css";
 
 interface MarketData {
@@ -71,16 +75,19 @@ export default function MarketIndicators() {
             <IndicatorCard
               label={data.baseRates.korea.label}
               value={`${data.baseRates.korea.value.toFixed(2)}%`}
+              icon={<IconFlag size={18} color="#00b894" />}
               source={data.baseRates.korea.source}
             />
             <IndicatorCard
               label={data.baseRates.us.label}
               value={`${data.baseRates.us.value.toFixed(2)}%`}
+              icon={<IconFlag size={18} color="#0984e3" />}
               source={data.baseRates.us.source}
             />
             <IndicatorCard
               label={data.usdKrw.label}
               value={`${data.usdKrw.value.toFixed(2)}원`}
+              icon={<IconWorldDollar size={18} />}
               source={data.usdKrw.source}
             />
           </div>
@@ -98,10 +105,14 @@ function IndicatorCard({
   label: string;
   value: string;
   source: string;
+  icon?: React.ReactNode;
 }) {
   return (
     <div className={styles.marketCard}>
-      <p className={styles.marketLabel}>{label}</p>
+      <p className={styles.marketLabel}>
+        {icon}
+        {label}
+      </p>
       <p className={styles.marketValue}>{value}</p>
       <p className={styles.marketSource}>{source}</p>
     </div>

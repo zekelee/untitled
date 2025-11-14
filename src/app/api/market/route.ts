@@ -18,8 +18,16 @@ export async function GET() {
     return NextResponse.json({
       updatedAt,
       baseRates: {
-        korea: { label: "한국 기준금리", value: 3.5, source: "한국은행" },
-        us: { label: "미국 기준금리", value: 5.25, source: "연준(Fed)" },
+        korea: {
+          label: "한국 기준금리",
+          value: 3.5,
+          source: "한국은행 (2025-02 기준)",
+        },
+        us: {
+          label: "미국 기준금리",
+          value: 5.25,
+          source: "미 연준 (2025-03 FOMC)",
+        },
       },
       usdKrw: {
         label: "USD / KRW",

@@ -444,12 +444,18 @@
   border-radius: 14px;
   padding: 0.85rem;
   background: var(--card-highlight);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
 .marketLabel {
   font-size: 0.85rem;
   color: var(--muted);
   text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 
 .marketValue {
