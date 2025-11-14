@@ -12,7 +12,7 @@ const API_BASE =
   "https://apis.data.go.kr/1613000";
 
 const ENDPOINT_MAP: Record<PropertyType, string> = {
-  apartment: "/RTMSDataSvcAptTradeDev",
+  apartment: "/RTMSDataSvcAptTradeDev/getRTMSDataSvcAptTradeDev",
   officetel: "/HouseTransactionService/v1/getRTMSDataSvcOffiTrade",
   house: "/HouseTransactionService/v1/getRTMSDataSvcSHTrade",
 };
@@ -79,7 +79,15 @@ export const fetchDealsFromMolit = async ({
   signal?: AbortSignal;
 }): Promise<DealsApiResponse> => {
   const endpoint = ENDPOINT_MAP[propertyType] ?? ENDPOINT_MAP.apartment;
-  const serviceKey = process.env.MOLIT_API_KEY;
+  const serviceKeyRaw = process.env.MOLIT_API_KEY;
+  const serviceKey = (() => {
+    if (!serviceKeyRaw) return "";
+    try {
+      return decodeURIComponent(serviceKeyRaw);
+    } catch {
+      return serviceKeyRaw;
+    }
+  })();
 
   if (!serviceKey) {
     throw new Error("MOLIT_API_KEY가 설정되지 않았습니다.");
@@ -91,6 +99,7 @@ export const fetchDealsFromMolit = async ({
   url.searchParams.set("DEAL_YMD", yearMonth);
   url.searchParams.set("numOfRows", "50");
   url.searchParams.set("pageNo", "1");
+  url.searchParams.set("_type", "json");
 
   const res = await fetch(url, {
     headers: { Accept: "application/json" },
