@@ -9,10 +9,11 @@ import type {
 } from "./types";
 
 const API_BASE =
-  process.env.MOLIT_API_BASE?.replace(/\/$/, "") ?? "https://api.odcloud.kr/api";
+  process.env.MOLIT_API_BASE?.replace(/\/$/, "") ??
+  "https://apis.data.go.kr/1613000";
 
 const ENDPOINT_MAP: Record<PropertyType, string> = {
-  apartment: "/ApartmentTransactionService/v1/getRTMSDataSvcAptTradeDev",
+  apartment: "/RTMSDataSvcAptTradeDev",
   officetel: "/HouseTransactionService/v1/getRTMSDataSvcOffiTrade",
   house: "/HouseTransactionService/v1/getRTMSDataSvcSHTrade",
 };

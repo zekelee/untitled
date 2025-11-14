@@ -16,7 +16,7 @@
 
 ```bash
 MOLIT_API_KEY=발급받은_서비스키(URLEncoding)
-MOLIT_API_BASE=https://api.odcloud.kr/api
+MOLIT_API_BASE=https://apis.data.go.kr/1613000
 # 선택: 기본 지역/주택 유형
 DEFAULT_REGION_CODE=41135
 ```
@@ -38,6 +38,9 @@ yarn start      # 빌드 결과 실행
 - `src/app/page.tsx`: 루트 페이지, `DealDashboard`를 렌더링.
 - `src/app/api/deals/route.ts`: 국토부 API 프록시 및 Mock fallback (아파트 거래 전용).
 - `src/lib/*`: 유형 정의, 상수, Mock 데이터, 데이터 요약 계산, API 헬퍼.
+
+> **인증키 주의**  
+> 공공데이터포털에서 제공하는 “일반 인증키(Encoding)” 값을 그대로 `MOLIT_API_KEY`에 넣어주세요. Decoding 키는 URL에 특수문자가 포함되지 않아 오류가 날 수 있으니 Encoding 키 사용을 권장합니다.
 - `src/components/dashboard/*`: 실거래 대시보드 UI와 스타일.
 
 ## 커스터마이징 아이디어
