@@ -1,5 +1,5 @@
-import DealDashboard from "@/components/dashboard/DealDashboard";
+import { redirect } from "next/navigation";
 
 export default function Home() {
-  return <DealDashboard />;
+  redirect("/real-estate");
 }
