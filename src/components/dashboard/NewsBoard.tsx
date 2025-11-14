@@ -1,32 +1,11 @@
 ﻿import classNames from "classnames";
 import { format } from "date-fns";
+import useSWR, { useSWRConfig } from "swr";
 import { IconNews, IconHomeSearch } from "@tabler/icons-react";
+import { Loader } from "@mantine/core";
 import MarketIndicators from "./MarketIndicators";
+import RefreshButton from "./RefreshButton";
 import styles from "./deal-dashboard.module.css";
-
-const NEWS_ITEMS = [
-  {
-    title: "한국 기준금리 동결, 주담대 3%대 유지",
-    summary:
-      "한국은행이 기준금리를 동결하며 시중은행 주담대가 3%대 초반을 유지하고 있습니다.",
-    source: "연합인포맥스",
-    publishedAt: "2025-05-16",
-  },
-  {
-    title: "GTX-A 파주 연장안 재추진",
-    summary:
-      "국토부가 GTX-A 추가 연장안을 검토하면서 운정 역세권 복합개발이 다시 속도를 내고 있습니다.",
-    source: "한국경제",
-    publishedAt: "2025-05-14",
-  },
-  {
-    title: "PF 연착륙 2단계 대책 발표",
-    summary:
-      "정부가 PF 보증 확대와 대환 프로그램을 내놓으며 공급 차질 우려가 완화되고 있습니다.",
-    source: "매일경제",
-    publishedAt: "2025-05-12",
-  },
-];
 
 const AUTOMATION_STEPS = [
   "국토부 실거래 API 수집 (3시간 간격)",
@@ -35,10 +14,53 @@ const AUTOMATION_STEPS = [
   "향후: Slack/Discord 채널, 가족 단톡 자동 공유",
 ];
 
+interface NewsResponse {
+  updatedAt: string;
+  articles: {
+    title: string;
+    summary: string;
+    source: string;
+    publishedAt: string;
+  }[];
+}
+
+const fetcher = async (url: string): Promise<NewsResponse> => {
+  const res = await fetch(url);
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data?.error ?? "뉴스를 불러올 수 없습니다.");
+  }
+  return data;
+};
+
 export default function NewsBoard() {
+  const { mutate } = useSWRConfig();
+  const {
+    data,
+    error,
+    isLoading,
+    mutate: mutateNews,
+  } = useSWR<NewsResponse>("/api/news", fetcher, {
+    refreshInterval: 1000 * 60 * 60,
+  });
+
+  const handleRefresh = () => {
+    mutateNews();
+    mutate("/api/market");
+  };
+
   return (
     <div className={styles.wrapper}>
       <div className={styles.inner}>
+        <div className={styles.controlsBar}>
+          <span className={styles.updatedAt}>
+            {data?.updatedAt
+              ? `업데이트 ${format(new Date(data.updatedAt), "yyyy.MM.dd HH:mm")}`
+              : "업데이트 대기"}
+          </span>
+          <RefreshButton loading={isLoading} onClick={handleRefresh} />
+        </div>
+
         <header className={styles.header}>
           <div>
             <p className={styles.kicker}>시장 브리핑</p>
@@ -57,18 +79,29 @@ export default function NewsBoard() {
             </div>
             <IconNews size={20} />
           </div>
-          <ul className={styles.newsList}>
-            {NEWS_ITEMS.map((item) => (
-              <li key={item.title} className={styles.newsItem}>
-                <div className={styles.newsMeta}>
-                  <span>{item.source}</span>
-                  <span>{format(new Date(item.publishedAt), "MM.dd")}</span>
-                </div>
-                <p className={styles.newsTitle}>{item.title}</p>
-                <p className={styles.newsSummary}>{item.summary}</p>
-              </li>
-            ))}
-          </ul>
+          {isLoading && (
+            <div className={styles.placeholder}>
+              <Loader color="var(--accent)" size="sm" />
+              <span>뉴스를 불러오는 중...</span>
+            </div>
+          )}
+          {!isLoading && error && (
+            <div className={styles.alert}>뉴스 오류: {error.message}</div>
+          )}
+          {!isLoading && !error && data && (
+            <ul className={styles.newsList}>
+              {data.articles.map((item) => (
+                <li key={item.title} className={styles.newsItem}>
+                  <div className={styles.newsMeta}>
+                    <span>{item.source}</span>
+                    <span>{format(new Date(item.publishedAt), "MM.dd")}</span>
+                  </div>
+                  <p className={styles.newsTitle}>{item.title}</p>
+                  <p className={styles.newsSummary}>{item.summary}</p>
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
 
         <MarketIndicators />

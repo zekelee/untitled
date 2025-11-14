@@ -6,6 +6,7 @@ import {
   IconFlag,
   IconWorldDollar,
 } from "@tabler/icons-react";
+import type { ReactNode } from "react";
 import styles from "./deal-dashboard.module.css";
 
 interface MarketData {
@@ -101,11 +102,12 @@ function IndicatorCard({
   label,
   value,
   source,
+  icon,
 }: {
   label: string;
   value: string;
   source: string;
-  icon?: React.ReactNode;
+  icon?: ReactNode;
 }) {
   return (
     <div className={styles.marketCard}>
