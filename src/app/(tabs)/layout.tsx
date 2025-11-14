@@ -8,7 +8,10 @@ export default function TabsLayout({
 }) {
   return (
     <div className={styles.tabsShell}>
-      <NavTabs />
+      <header className={styles.tabsHeader}>
+        <div className={styles.brand}>이진규 집사기 프로젝트</div>
+        <NavTabs />
+      </header>
       <div className={styles.tabContent}>{children}</div>
     </div>
   );

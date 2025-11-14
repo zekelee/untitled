@@ -13,6 +13,14 @@
   gap: 1.25rem;
 }
 
+.controlsBar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
 .header {
   display: flex;
   flex-direction: column;
@@ -46,6 +54,40 @@
   padding: 0.35rem 0.8rem;
   box-shadow: var(--shadow);
   z-index: 5;
+}
+
+.areaToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.8rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  box-shadow: var(--shadow);
+}
+
+.areaToggleLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.areaSegment :global(.mantine-SegmentedControl-root) {
+  background: transparent;
+}
+
+.areaSegment :global(.mantine-SegmentedControl-indicator) {
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: #03101f;
+}
+
+.areaSegment :global(button) {
+  font-weight: 600;
+  color: var(--muted);
 }
 
 .refreshIcon {
@@ -139,6 +181,8 @@
   border: 1px solid var(--border);
   padding: 1.25rem;
   box-shadow: var(--shadow);
+  position: relative;
+  overflow: hidden;
 }
 
 .cardHeader {
@@ -189,6 +233,19 @@
   gap: 0.5rem;
   align-items: center;
   justify-content: center;
+}
+
+.loadingOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(5, 8, 15, 0.7);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  font-size: 0.9rem;
 }
 
 .alertSummary {

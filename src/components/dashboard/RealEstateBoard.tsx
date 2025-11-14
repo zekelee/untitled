@@ -16,15 +16,6 @@ import {
 import { Line } from "react-chartjs-2";
 import classNames from "classnames";
 import { format } from "date-fns";
-import { ActionIcon, Loader, Select, Switch, Tooltip } from "@mantine/core";
-import {
-  IconActivity,
-  IconBell,
-  IconHomeSearch,
-  IconRefresh,
-  IconScale,
-  IconTrendingUp,
-} from "@tabler/icons-react";
 import {
   DEFAULT_PROPERTY_TYPE,
   DEFAULT_REGION,
@@ -37,6 +28,17 @@ import {
   percentLabel,
   priceDiffRatio,
 } from "@/lib/utils";
+import { Select } from "@mantine/core";
+import {
+  IconActivity,
+  IconBell,
+  IconHomeSearch,
+  IconScale,
+  IconTrendingUp,
+} from "@tabler/icons-react";
+import AreaToggle, { AreaUnit } from "./AreaToggle";
+import RefreshButton from "./RefreshButton";
+import LoadingOverlay from "./LoadingOverlay";
 import styles from "./deal-dashboard.module.css";
 
 const PYEONG_RATIO = 3.3058;
@@ -63,7 +65,7 @@ const fetcher = async (url: string): Promise<DealsApiResponse> => {
 export default function RealEstateBoard() {
   const region = DEFAULT_REGION;
   const propertyType: PropertyType = DEFAULT_PROPERTY_TYPE;
-  const [areaUnit, setAreaUnit] = useState<"sqm" | "pyeong">("sqm");
+  const [areaUnit, setAreaUnit] = useState<AreaUnit>("sqm");
   const [alertChannel, setAlertChannel] = useState("kakao");
   const selectedMonth = currentYearMonth();
   const alertPrice = 950_000_000;
@@ -166,32 +168,9 @@ export default function RealEstateBoard() {
   return (
     <div className={styles.wrapper}>
       <div className={styles.inner}>
-        <div className={styles.floatingMenu}>
-          <div className={styles.floatingSegment}>
-            <span>{areaUnit === "sqm" ? "㎡" : "평"}</span>
-            <Switch
-              checked={areaUnit === "pyeong"}
-              size="md"
-              onLabel="평"
-              offLabel="㎡"
-              onChange={(event) =>
-                setAreaUnit(event.currentTarget.checked ? "pyeong" : "sqm")
-              }
-            />
-          </div>
-          <Tooltip label="국토부 API 데이터 새로고침" position="bottom">
-            <ActionIcon
-              size="lg"
-              radius="xl"
-              variant="gradient"
-              gradient={{ from: "cyan", to: "lime", deg: 120 }}
-              onClick={handleRefresh}
-              disabled={isLoading}
-              className={styles.refreshIcon}
-            >
-              <IconRefresh size={18} />
-            </ActionIcon>
-          </Tooltip>
+        <div className={styles.controlsBar}>
+          <AreaToggle value={areaUnit} onChange={setAreaUnit} />
+          <RefreshButton loading={isLoading} onClick={handleRefresh} />
         </div>
 
         <header className={styles.header}>
@@ -248,6 +227,10 @@ export default function RealEstateBoard() {
 
         <section className={styles.split}>
           <div className={classNames(styles.card, styles.chartCard)}>
+            <LoadingOverlay
+              visible={isLoading && !!data}
+              label="국토부 데이터를 불러오는 중..."
+            />
             <div className={styles.cardHeader}>
               <div>
                 <p className={styles.cardKicker}>가격 추이</p>
@@ -263,17 +246,12 @@ export default function RealEstateBoard() {
               </span>
             </div>
             <div className={styles.chartWrapper}>
-              {isLoading && !data ? (
-                <div className={styles.placeholder}>
-                  <Loader color="gray" size="sm" />
-                  <span>국토부 데이터를 불러오는 중...</span>
-                </div>
-              ) : summary?.monthlySeries?.length ? (
+              {summary?.monthlySeries?.length ? (
                 <Line data={priceLineData} options={chartOptions} />
+              ) : error ? (
+                <div className={styles.placeholder}>국토부 응답을 기다리고 있습니다.</div>
               ) : (
-                <div className={styles.placeholder}>
-                  최근 월별 데이터가 없습니다.
-                </div>
+                <div className={styles.placeholder}>최근 월별 데이터가 없습니다.</div>
               )}
             </div>
           </div>
@@ -306,8 +284,7 @@ export default function RealEstateBoard() {
                     최근 신고가 {formatCurrencyKRW(summary.latestPrice)}
                   </span>
                   <span>
-                    목표 {formatCurrencyKRW(alertPrice)} 대비
-                    {" "}
+                    목표 {formatCurrencyKRW(alertPrice)} 대비 {" "}
                     {percentLabel(
                       priceDiffRatio(alertPrice, summary.latestPrice),
                     )}
@@ -321,6 +298,10 @@ export default function RealEstateBoard() {
         </section>
 
         <section className={classNames(styles.card, styles.tableCard)}>
+          <LoadingOverlay
+            visible={isLoading && !!data}
+            label="실거래 목록을 불러오는 중..."
+          />
           <div className={styles.cardHeader}>
             <div>
               <p className={styles.cardKicker}>최신 신고 내역</p>
@@ -352,7 +333,7 @@ export default function RealEstateBoard() {
                     <td>{formatCurrencyKRW(deal.price)}</td>
                   </tr>
                 ))}
-                {deals.length === 0 && (
+                {deals.length === 0 && !isLoading && (
                   <tr>
                     <td colSpan={5} className={styles.placeholder}>
                       국토부 실거래를 불러오는 중입니다.
@@ -426,7 +407,14 @@ function StatCard({
 }
 
 const formatFloorValue = (deal: DealRecord) => {
-  const current = deal.floor ?? "-";
-  const total = deal.totalFloors ?? "?";
+  const parseFloor = (value?: string) => {
+    if (!value) return "-";
+    const num = Number(value.toString().replace(/[^\d-]/g, ""));
+    if (Number.isNaN(num)) return value;
+    return `${num}층`;
+  };
+
+  const current = parseFloor(deal.floor);
+  const total = deal.totalFloors ? `${deal.totalFloors}층` : "?";
   return `${current}/${total}`;
 };
