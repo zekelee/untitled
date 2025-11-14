@@ -93,10 +93,14 @@
 .refreshIcon {
   box-shadow: var(--shadow);
   color: #03101f;
+  transition: none;
 }
 
-.refreshIcon:hover {
+.refreshIcon:hover,
+.refreshIcon:focus-visible {
   transform: none;
+  color: #03101f;
+  box-shadow: var(--shadow);
 }
 
 .floatingSegment {
