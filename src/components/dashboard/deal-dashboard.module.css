@@ -48,6 +48,15 @@
   z-index: 5;
 }
 
+.refreshIcon {
+  box-shadow: var(--shadow);
+  color: #03101f;
+}
+
+.refreshIcon:hover {
+  transform: none;
+}
+
 .floatingSegment {
   display: flex;
   align-items: center;

@@ -1,12 +1,6 @@
-"use client";
+﻿"use client";
 
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  type ReactNode,
-} from "react";
+import { useCallback, useMemo, useState, type ReactNode } from "react";
 import useSWR from "swr";
 import {
   CategoryScale,
@@ -22,13 +16,7 @@ import {
 import { Line } from "react-chartjs-2";
 import classNames from "classnames";
 import { format } from "date-fns";
-import {
-  ActionIcon,
-  Loader,
-  Select,
-  Switch,
-  Tooltip,
-} from "@mantine/core";
+import { ActionIcon, Loader, Select, Switch, Tooltip } from "@mantine/core";
 import {
   IconActivity,
   IconBell,
@@ -50,8 +38,6 @@ import {
   priceDiffRatio,
 } from "@/lib/utils";
 import styles from "./deal-dashboard.module.css";
-
-type AreaUnit = "sqm" | "pyeong";
 
 const PYEONG_RATIO = 3.3058;
 
@@ -77,31 +63,23 @@ const fetcher = async (url: string): Promise<DealsApiResponse> => {
 export default function RealEstateBoard() {
   const region = DEFAULT_REGION;
   const propertyType: PropertyType = DEFAULT_PROPERTY_TYPE;
-  const [areaUnit, setAreaUnit] = useState<AreaUnit>("sqm");
+  const [areaUnit, setAreaUnit] = useState<"sqm" | "pyeong">("sqm");
   const [alertChannel, setAlertChannel] = useState("kakao");
-  const [isClient, setIsClient] = useState(false);
   const selectedMonth = currentYearMonth();
   const alertPrice = 950_000_000;
 
-  useEffect(() => {
-    // 렌더링 시점을 클라이언트로 맞추기 위한 처리
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setIsClient(true);
-  }, []);
-
   const searchKey = `/api/deals?region=${region}&propertyType=${propertyType}&yearMonth=${selectedMonth}`;
 
-  const { data, error, isLoading, isValidating, mutate } =
-    useSWR<DealsApiResponse>(
-      searchKey,
-      fetcher,
-      {
-        refreshInterval: 1000 * 60 * 10,
-        revalidateOnFocus: false,
-        errorRetryCount: 5,
-        errorRetryInterval: 5000,
-      },
-    );
+  const { data, error, isLoading, isValidating, mutate } = useSWR<DealsApiResponse>(
+    searchKey,
+    fetcher,
+    {
+      refreshInterval: 1000 * 60 * 10,
+      revalidateOnFocus: false,
+      errorRetryCount: 5,
+      errorRetryInterval: 5000,
+    },
+  );
 
   const deals: DealRecord[] = useMemo(() => {
     if (!data?.deals) return [];
@@ -141,26 +119,18 @@ export default function RealEstateBoard() {
     () => ({
       responsive: true,
       plugins: {
-        legend: {
-          display: false,
-        },
+        legend: { display: false },
         tooltip: {
           callbacks: {
             label: (ctx: TooltipItem<"line">) =>
-              ` ${formatCurrencyKRW(
-                Number(ctx.raw ?? ctx.parsed?.y ?? 0),
-              )}`,
+              ` ${formatCurrencyKRW(Number(ctx.raw ?? ctx.parsed?.y ?? 0))}`,
           },
         },
       },
       scales: {
         x: {
-          ticks: {
-            color: "var(--muted)",
-          },
-          grid: {
-            display: false,
-          },
+          ticks: { color: "var(--muted)" },
+          grid: { display: false },
         },
         y: {
           ticks: {
@@ -168,9 +138,7 @@ export default function RealEstateBoard() {
             callback: (value: number | string) =>
               `${Number(value) / 100_000_000}억`,
           },
-          grid: {
-            color: "rgba(255,255,255,0.05)",
-          },
+          grid: { color: "rgba(255,255,255,0.05)" },
         },
       },
     }),
@@ -194,16 +162,6 @@ export default function RealEstateBoard() {
   const areaRangeLabel = summary
     ? `${formatAreaValue(summary.areaRange[0])} ~ ${formatAreaValue(summary.areaRange[1])}`
     : "면적 범위";
-
-  if (!isClient) {
-    return (
-      <div className={styles.wrapper}>
-        <div className={styles.inner}>
-          <div className={styles.placeholder}>데이터를 준비하고 있습니다…</div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className={styles.wrapper}>
@@ -229,7 +187,7 @@ export default function RealEstateBoard() {
               gradient={{ from: "cyan", to: "lime", deg: 120 }}
               onClick={handleRefresh}
               disabled={isLoading}
-              style={{ color: "#03101f" }}
+              className={styles.refreshIcon}
             >
               <IconRefresh size={18} />
             </ActionIcon>
@@ -241,19 +199,16 @@ export default function RealEstateBoard() {
             <p className={styles.kicker}>운정 실거래 인텔리전스</p>
             <h1>아파트 가격 흐름 & 구매 전략</h1>
             <p className={styles.subtitle}>
-              국토부 실거래 API를 기반으로 파주 운정신도시 아파트 가격을
+              국토부 실거래가 API를 기반으로 파주 운정신도시 아파트 가격을
               추적하고 알림 조건을 정리합니다.
             </p>
           </div>
         </header>
 
-        {(error || !data) && (
+        {error && (
           <div className={styles.alert}>
-            {error
-              ? `국토부 API 오류: ${error.message}${
-                  isValidating ? " · 재시도 중..." : ""
-                }`
-              : "국토부 데이터를 불러오는 중입니다."}
+            국토부 API 오류: {error.message}
+            {isValidating ? " · 재시도 중" : ""}
           </div>
         )}
 
@@ -311,7 +266,7 @@ export default function RealEstateBoard() {
               {isLoading && !data ? (
                 <div className={styles.placeholder}>
                   <Loader color="gray" size="sm" />
-                  <span>데이터를 불러오는 중...</span>
+                  <span>국토부 데이터를 불러오는 중...</span>
                 </div>
               ) : summary?.monthlySeries?.length ? (
                 <Line data={priceLineData} options={chartOptions} />
@@ -351,7 +306,8 @@ export default function RealEstateBoard() {
                     최근 신고가 {formatCurrencyKRW(summary.latestPrice)}
                   </span>
                   <span>
-                    목표 {formatCurrencyKRW(alertPrice)} 대비{" "}
+                    목표 {formatCurrencyKRW(alertPrice)} 대비
+                    {" "}
                     {percentLabel(
                       priceDiffRatio(alertPrice, summary.latestPrice),
                     )}
@@ -389,9 +345,7 @@ export default function RealEstateBoard() {
               <tbody>
                 {deals.slice(0, 8).map((deal) => (
                   <tr key={deal.id}>
-                    <td>
-                      {format(new Date(deal.contractDate), "yyyy.MM.dd")}
-                    </td>
+                    <td>{format(new Date(deal.contractDate), "yyyy.MM.dd")}</td>
                     <td>{deal.apartmentName}</td>
                     <td>{formatAreaValue(deal.area)}</td>
                     <td>{formatFloorValue(deal)}</td>
@@ -401,7 +355,7 @@ export default function RealEstateBoard() {
                 {deals.length === 0 && (
                   <tr>
                     <td colSpan={5} className={styles.placeholder}>
-                      운정 아파트 실거래를 불러오는 중입니다.
+                      국토부 실거래를 불러오는 중입니다.
                     </td>
                   </tr>
                 )}
@@ -419,20 +373,17 @@ export default function RealEstateBoard() {
           </div>
           <ul className={styles.memoList}>
             <li>
-              최근 신고{" "}
-              <strong>{deals[0]?.apartmentName ?? "단지"}</strong>{" "}
+              최근 신고 {deals[0]?.apartmentName ?? "단지"}
               {summary?.latestPrice
-                ? `${formatCurrencyKRW(summary.latestPrice)} 수준`
-                : "가격 데이터 준비중"}
-              으로, 역세권 대형 평형 시세 점검
+                ? ` ${formatCurrencyKRW(summary.latestPrice)} 수준`
+                : " 가격 준비중"}
             </li>
             <li>
-              월별 평균{" "}
-              {summary ? formatCurrencyKRW(summary.averagePrice) : "–"} /
-              전월 대비 {percentLabel(priceDelta)} 흐름
+              월별 평균 {summary ? formatCurrencyKRW(summary.averagePrice) : "–"}
+              / 전월 대비 {percentLabel(priceDelta)} 흐름
             </li>
             <li>면적 단위: {areaUnit === "sqm" ? "제곱미터" : "평"}</li>
-            <li>보금자리론 한도·금리 조건에 맞춰 자금 계획 확정</li>
+            <li>보금자리론 한도·금리를 맞춰 자금 계획 확정</li>
           </ul>
         </section>
       </div>
