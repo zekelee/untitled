@@ -70,7 +70,7 @@ export const fetchDealsFromMolit = async ({
 
   if (!serviceKey) {
     const deals = buildMockDeals({ regionCode, propertyType });
-    return { deals, summary: summarizeDeals(deals) };
+    return { deals, summary: summarizeDeals(deals), source: "mock" };
   }
 
   const url = new URL(`${API_BASE}${endpoint}`);
@@ -99,9 +99,9 @@ export const fetchDealsFromMolit = async ({
 
   if (!Array.isArray(candidates) || candidates.length === 0) {
     const fallback = buildMockDeals({ regionCode, propertyType });
-    return { deals: fallback, summary: summarizeDeals(fallback) };
+    return { deals: fallback, summary: summarizeDeals(fallback), source: "mock" };
   }
 
   const deals = candidates.map((item) => normalizeDeal(item, propertyType));
-  return { deals, summary: summarizeDeals(deals) };
+  return { deals, summary: summarizeDeals(deals), source: "api" };
 };

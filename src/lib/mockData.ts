@@ -8,6 +8,17 @@ const basePrices = {
   house: 780_000_000,
 } satisfies Record<PropertyType, number>;
 
+const APT_NAMES = [
+  "운정힐스테이트",
+  "한화포레나운정",
+  "동문굿모닝힐",
+  "푸르지오파르세나",
+  "한라비발디",
+  "자이더시티",
+  "e편한세상운정",
+  "센트럴푸르지오",
+];
+
 export const buildMockDeals = ({
   regionCode = DEFAULT_REGION,
   propertyType = DEFAULT_PROPERTY_TYPE,
@@ -29,7 +40,10 @@ export const buildMockDeals = ({
     return {
       id: `${regionCode}-${propertyType}-${index}`,
       propertyType,
-      apartmentName: propertyType === "house" ? "전원주택" : "꿈에그린",
+      apartmentName:
+        propertyType === "house"
+          ? "전원주택"
+          : APT_NAMES[index % APT_NAMES.length],
       area,
       floor: propertyType === "house" ? undefined : `${10 + (index % 15)}층`,
       contractDate: format(dealDate, "yyyy-MM-dd"),

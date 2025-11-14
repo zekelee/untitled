@@ -25,13 +25,14 @@ export async function GET(request: NextRequest) {
       yearMonth,
       propertyType,
     });
-    return NextResponse.json(data);
+    return NextResponse.json({ ...data, source: data.source ?? "api" });
   } catch (error) {
     console.error("국토부 API 호출 실패", error);
     const fallbackDeals = buildMockDeals({ regionCode: region, propertyType });
     return NextResponse.json({
       deals: fallbackDeals,
       summary: summarizeDeals(fallbackDeals),
+      source: "mock",
       error: error instanceof Error ? error.message : "알 수 없는 오류",
     });
   }

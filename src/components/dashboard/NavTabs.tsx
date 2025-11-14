@@ -7,7 +7,7 @@ import styles from "./nav-tabs.module.css";
 
 const tabs = [
   { href: "/real-estate", label: "운정 실거래" },
-  { href: "/news", label: "현장 뉴스" },
+  { href: "/news", label: "시장 뉴스" },
   { href: "/finance", label: "대출 전략" },
 ];
 

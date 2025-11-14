@@ -34,6 +34,8 @@ export interface DealsSummary {
 export interface DealsApiResponse {
   deals: DealRecord[];
   summary: DealsSummary;
+  source?: "api" | "mock";
+  error?: string;
 }
 
 export interface RegionOption {

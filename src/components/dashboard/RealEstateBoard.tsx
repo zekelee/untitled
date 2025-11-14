@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import useSWR from "swr";
 import {
   CategoryScale,
@@ -16,13 +22,7 @@ import {
 import { Line } from "react-chartjs-2";
 import classNames from "classnames";
 import { format } from "date-fns";
-import {
-  ActionIcon,
-  Select,
-  Switch,
-  Textarea,
-  Tooltip,
-} from "@mantine/core";
+import { ActionIcon, Select, Switch, Tooltip } from "@mantine/core";
 import {
   IconActivity,
   IconBell,
@@ -71,12 +71,16 @@ export default function RealEstateBoard() {
   const region = DEFAULT_REGION;
   const propertyType: PropertyType = DEFAULT_PROPERTY_TYPE;
   const [areaUnit, setAreaUnit] = useState<AreaUnit>("sqm");
+  const [alertChannel, setAlertChannel] = useState("kakao");
+  const [isClient, setIsClient] = useState(false);
   const selectedMonth = currentYearMonth();
   const alertPrice = 950_000_000;
-  const [alertChannel, setAlertChannel] = useState("kakao");
-  const [memo, setMemo] = useState(
-    "부모님 지원 2억과 보금자리론을 조합해 운정 역세권 84㎡ 매수를 목표로 합니다.",
-  );
+
+  useEffect(() => {
+    // 렌더링 시점을 클라이언트로 맞추기 위한 처리
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsClient(true);
+  }, []);
 
   const searchKey = `/api/deals?region=${region}&propertyType=${propertyType}&yearMonth=${selectedMonth}`;
 
@@ -99,6 +103,7 @@ export default function RealEstateBoard() {
   }, [data]);
 
   const summary = data?.summary;
+  const isMock = data?.source !== "api";
   const priceDelta = priceDiffRatio(
     summary?.latestPrice,
     summary?.previousPrice,
@@ -181,6 +186,16 @@ export default function RealEstateBoard() {
     ? `${formatAreaValue(summary.areaRange[0])} ~ ${formatAreaValue(summary.areaRange[1])}`
     : "면적 범위";
 
+  if (!isClient) {
+    return (
+      <div className={styles.wrapper}>
+        <div className={styles.inner}>
+          <div className={styles.placeholder}>데이터를 준비하고 있습니다…</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.wrapper}>
       <div className={styles.inner}>
@@ -217,15 +232,16 @@ export default function RealEstateBoard() {
             <h1>아파트 가격 흐름 & 구매 전략</h1>
             <p className={styles.subtitle}>
               국토부 실거래 API를 기반으로 파주 운정신도시 아파트 가격을
-              추적하고, 가족 설득 자료와 알림 조건을 정리합니다.
+              추적하고 알림 조건을 정리합니다.
             </p>
           </div>
         </header>
 
-        {error && (
+        {(error || isMock) && (
           <div className={styles.alert}>
-            데이터를 불러오지 못했습니다. .env에 발급받은 서비스키를
-            입력했는지, API 호출 제한을 초과하지 않았는지 확인해주세요.
+            {error
+              ? "데이터를 불러오지 못했습니다. .env 파일에 발급받은 서비스키를 입력했는지 확인해주세요."
+              : "서비스키가 설정되지 않아 현재는 샘플 데이터가 표시되고 있습니다."}
           </div>
         )}
 
@@ -311,14 +327,6 @@ export default function RealEstateBoard() {
               }
               radius="md"
             />
-            <Textarea
-              label="가족 설득 메모"
-              value={memo}
-              onChange={(event) => setMemo(event.currentTarget.value)}
-              minRows={4}
-              radius="md"
-              autosize
-            />
             <div className={styles.alertSummary}>
               {summary?.latestPrice ? (
                 <>
@@ -388,7 +396,7 @@ export default function RealEstateBoard() {
         <section className={classNames(styles.card, styles.memoCard)}>
           <div className={styles.cardHeader}>
             <div>
-              <p className={styles.cardKicker}>가족 공유 포인트</p>
+              <p className={styles.cardKicker}>체크 포인트</p>
               <h2>투자 근거 요약</h2>
             </div>
           </div>
@@ -399,7 +407,7 @@ export default function RealEstateBoard() {
               {summary?.latestPrice
                 ? `${formatCurrencyKRW(summary.latestPrice)} 수준`
                 : "가격 데이터 준비중"}
-              으로, 지원금 2억을 포함한 자금 계획 검토 필요
+              으로, 역세권 대형 평형 시세 점검
             </li>
             <li>
               월별 평균{" "}
@@ -407,9 +415,7 @@ export default function RealEstateBoard() {
               전월 대비 {percentLabel(priceDelta)} 흐름
             </li>
             <li>면적 단위: {areaUnit === "sqm" ? "제곱미터" : "평"}</li>
-            <li>
-              메모: <span>{memo}</span>
-            </li>
+            <li>보금자리론 한도·금리 조건에 맞춰 자금 계획 확정</li>
           </ul>
         </section>
       </div>
@@ -428,7 +434,7 @@ function StatCard({
   value: string;
   helper?: string;
   positive?: boolean;
-  icon?: React.ReactNode;
+  icon?: ReactNode;
 }) {
   return (
     <div className={styles.statCard}>
