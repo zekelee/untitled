@@ -19,7 +19,6 @@ import { format } from "date-fns";
 import {
   DEFAULT_PROPERTY_TYPE,
   DEFAULT_REGION,
-  REGIONS,
   currentYearMonth,
 } from "@/lib/constants";
 import type { DealRecord, DealsApiResponse, PropertyType } from "@/lib/types";
@@ -57,7 +56,7 @@ const fromMonthInputValue = (value: string) => value.replace("-", "");
 
 export default function DealDashboard() {
   const initialMonth = toMonthInputValue(currentYearMonth());
-  const [region, setRegion] = useState(DEFAULT_REGION);
+  const region = DEFAULT_REGION;
   const propertyType: PropertyType = DEFAULT_PROPERTY_TYPE;
   const [selectedMonth, setSelectedMonth] = useState(initialMonth);
   const [maxBudget, setMaxBudget] = useState(1_200_000_000);
@@ -185,18 +184,6 @@ export default function DealDashboard() {
         </header>
 
         <section className={styles.filters}>
-          <FilterField label="관심 지역">
-            <select
-              value={region}
-              onChange={(event) => setRegion(event.target.value)}
-            >
-              {REGIONS.map((item) => (
-                <option key={item.code} value={item.code}>
-                  {item.label}
-                </option>
-              ))}
-            </select>
-          </FilterField>
 
           <FilterField label="조회 기준 월">
             <input
