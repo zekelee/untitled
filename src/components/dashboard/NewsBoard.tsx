@@ -1,4 +1,6 @@
-﻿import classNames from "classnames";
+﻿"use client";
+
+import classNames from "classnames";
 import { format } from "date-fns";
 import useSWR, { useSWRConfig } from "swr";
 import { IconNews, IconHomeSearch } from "@tabler/icons-react";
