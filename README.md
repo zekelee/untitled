@@ -1,36 +1,47 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## 개요
 
-## Getting Started
+수도권 관심 지역의 주택 실거래 데이터를 모니터링하고, 가족·부모님을 설득하기 위한 근거 자료(가격 추이, 예산 기준, 메모)를 한 화면에서 정리하는 Next.js + TypeScript 대시보드입니다. 국토부 실거래가 공개 API(공공데이터포털) 응답을 직접 호출하며, API 키가 없으면 시뮬레이션용 Mock 데이터를 사용합니다.
 
-First, run the development server:
+## 주요 기능
+
+- **실거래 API 연동**: `/api/deals` 라우트에서 지역 코드·월별 파라미터·주택 유형에 맞춰 국토부 오픈 API 호출. 실패 시 Mock 데이터로 자동 대체.
+- **대시보드 UI**: 관심 지역 선택, 주택 유형 토글, 월 선택, 예산 상한 필터, 알림 기준가/채널 설정 UI를 제공.
+- **아파트 전용 모니터링**: 사용자 요청에 따라 현재는 아파트 실거래만 취급합니다(오피스텔·다가구 제외).
+- **가격 추이 & 통계**: 월별 평균 실거래 라인 차트, 평균/중위/증감률/계약건수 카드, 예산 조건 이하 계약 리스트 표시.
+- **가족 설득 메모**: 지원금 계획, 목표 알림가, 최신 거래 사례를 메모 카드에 자동 정리.
+
+## 환경 변수
+
+`.env` 파일을 프로젝트 루트에 추가하고 아래 값을 설정하세요 (`.env.example` 참고).
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+MOLIT_API_KEY=발급받은_서비스키(URLEncoding)
+MOLIT_API_BASE=https://api.odcloud.kr/api
+# 선택: 기본 지역/주택 유형
+DEFAULT_REGION_CODE=41135
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- 서비스키는 공공데이터포털에서 신청 후 “일반 인증키(Encoding)” 값을 사용합니다.
+- 개발/testing 단계에서 키를 비워두면 Mock 데이터가 자동 사용됩니다.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 실행 방법
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+yarn install
+yarn dev        # http://localhost:3000
+yarn build      # 프로덕션 빌드
+yarn start      # 빌드 결과 실행
+```
 
-## Learn More
+## 구조 요약
 
-To learn more about Next.js, take a look at the following resources:
+- `src/app/page.tsx`: 루트 페이지, `DealDashboard`를 렌더링.
+- `src/app/api/deals/route.ts`: 국토부 API 프록시 및 Mock fallback (아파트 거래 전용).
+- `src/lib/*`: 유형 정의, 상수, Mock 데이터, 데이터 요약 계산, API 헬퍼.
+- `src/components/dashboard/*`: 실거래 대시보드 UI와 스타일.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 커스터마이징 아이디어
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Supabase/Planetscale 등 외부 DB를 붙여 수집 데이터를 영구 저장.
+2. Edge Functions/CRON으로 관심 지역 자동 크롤링 및 알림 발송.
+3. 가족 설득용 PDF/슬라이드 리포트 자동 생성(예: react-email + 비동기 작업).

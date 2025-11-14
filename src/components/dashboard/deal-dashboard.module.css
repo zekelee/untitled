@@ -1,0 +1,328 @@
+.wrapper {
+  width: 100%;
+  min-height: 100vh;
+  padding: 3rem 1.5rem 4rem;
+}
+
+.inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.5rem;
+  align-items: flex-start;
+}
+
+.kicker {
+  color: var(--accent);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  color: var(--muted);
+  margin-top: 0.35rem;
+  line-height: 1.5;
+}
+
+.refreshButton {
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: #050607;
+  border: none;
+  border-radius: 999px;
+  padding: 0.75rem 1.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  transition: opacity 0.2s ease;
+}
+
+.refreshButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  background: var(--card);
+  padding: 1.25rem;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+.filterField {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.filterField > span {
+  font-weight: 600;
+}
+
+.filterField select,
+.filterField input {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--card-highlight);
+  color: var(--foreground);
+}
+
+.segmented {
+  display: flex;
+  background: var(--card-highlight);
+  padding: 0.2rem;
+  border-radius: 999px;
+  gap: 0.2rem;
+}
+
+.segmentButton {
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 0.45rem 0.6rem;
+  border-radius: 999px;
+  color: var(--muted);
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.segmentActive {
+  background: var(--background);
+  color: var(--foreground);
+  box-shadow: var(--shadow);
+}
+
+.alert {
+  background: rgba(255, 107, 107, 0.1);
+  border: 1px solid rgba(255, 107, 107, 0.4);
+  padding: 1rem 1.25rem;
+  border-radius: 16px;
+  font-size: 0.95rem;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.statCard {
+  background: var(--card);
+  padding: 1.1rem 1.25rem;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+.statLabel {
+  color: var(--muted);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.statValue {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-top: 0.3rem;
+}
+
+.statHelper {
+  margin-top: 0.3rem;
+  color: var(--muted);
+}
+
+.statPositive {
+  color: var(--success);
+}
+
+.statNegative {
+  color: var(--danger);
+}
+
+.split {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.card {
+  background: var(--card);
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  padding: 1.5rem;
+  box-shadow: var(--shadow);
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.chartCard {
+  min-height: 360px;
+}
+
+.alertCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.tableCard {
+  overflow: hidden;
+}
+
+.cardKicker {
+  color: var(--muted);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+}
+
+.updatedAt {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.chartWrapper {
+  margin-top: 1rem;
+  width: 100%;
+  min-height: 260px;
+}
+
+.placeholder {
+  text-align: center;
+  color: var(--muted);
+  padding: 2rem 0;
+}
+
+.alertCard .fieldLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 1rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.alertCard input,
+.alertCard select,
+.alertCard textarea {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--card-highlight);
+  color: var(--foreground);
+  padding: 0.7rem;
+}
+
+.alertCard textarea {
+  resize: vertical;
+}
+
+.alertSummary {
+  margin-top: 1rem;
+  padding: 0.9rem;
+  border-radius: 12px;
+  background: rgba(45, 217, 188, 0.08);
+  border: 1px solid rgba(45, 217, 188, 0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.9rem;
+}
+
+.tableCard table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.tableWrapper {
+  margin-top: 1rem;
+  overflow-x: auto;
+}
+
+.tableCard th,
+.tableCard td {
+  text-align: left;
+  padding: 0.65rem 0.35rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  white-space: nowrap;
+}
+
+.tableCard th {
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+}
+
+.helperText {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.memoCard {
+  background: linear-gradient(120deg, rgba(33, 40, 56, 0.9), rgba(12, 16, 28, 0.92));
+}
+
+.memoList {
+  margin-top: 1rem;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.memoList li {
+  position: relative;
+  padding-left: 1.1rem;
+}
+
+.memoList li::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+}
+
+.memoList span {
+  color: var(--foreground);
+  font-weight: 600;
+}
+
+.cardHeader h2 {
+  margin-top: 0.2rem;
+}
+
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+  }
+
+  .cardHeader {
+    flex-direction: column;
+  }
+}
