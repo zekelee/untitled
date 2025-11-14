@@ -22,7 +22,6 @@ import {
   SegmentedControl,
   Select,
   Textarea,
-  TextInput,
   Tooltip,
 } from "@mantine/core";
 import {
@@ -76,25 +75,18 @@ const fetcher = async (url: string): Promise<DealsApiResponse> => {
   return res.json();
 };
 
-const toMonthInputValue = (yearMonth: string) =>
-  `${yearMonth.slice(0, 4)}-${yearMonth.slice(4, 6)}`;
-
-const fromMonthInputValue = (value: string) => value.replace("-", "");
-
 export default function DealDashboard() {
-  const initialMonth = toMonthInputValue(currentYearMonth());
   const region = DEFAULT_REGION;
   const propertyType: PropertyType = DEFAULT_PROPERTY_TYPE;
   const [areaUnit, setAreaUnit] = useState<AreaUnit>("sqm");
-  const [selectedMonth, setSelectedMonth] = useState(initialMonth);
-  const [maxBudget, setMaxBudget] = useState(1_200_000_000);
+  const selectedMonth = currentYearMonth();
   const [alertPrice, setAlertPrice] = useState(950_000_000);
   const [alertChannel, setAlertChannel] = useState("kakao");
   const [memo, setMemo] = useState(
     "부모님 지원 2억 포함 자금 계획과 실거래 추이 설명 자료 준비",
   );
 
-  const searchKey = `/api/deals?region=${region}&propertyType=${propertyType}&yearMonth=${fromMonthInputValue(selectedMonth)}`;
+  const searchKey = `/api/deals?region=${region}&propertyType=${propertyType}&yearMonth=${selectedMonth}`;
 
   const { data, error, isLoading, mutate } = useSWR<DealsApiResponse>(
     searchKey,
@@ -113,11 +105,6 @@ export default function DealDashboard() {
         new Date(a.contractDate).getTime(),
     );
   }, [data]);
-
-  const filteredDeals = useMemo(
-    () => deals.filter((deal) => (maxBudget ? deal.price <= maxBudget : true)),
-    [deals, maxBudget],
-  );
 
   const summary = data?.summary;
   const priceDelta = priceDiffRatio(
@@ -205,6 +192,30 @@ export default function DealDashboard() {
   return (
     <div className={styles.wrapper}>
       <div className={styles.inner}>
+        <div className={styles.floatingMenu}>
+          <div className={styles.floatingSegment}>
+            <IconRulerMeasure size={16} />
+            <SegmentedControl
+              value={areaUnit}
+              onChange={(value: string) => setAreaUnit(value as AreaUnit)}
+              data={AREA_UNIT_OPTIONS}
+              radius="xl"
+              size="xs"
+            />
+          </div>
+          <Tooltip label="국토부 API 데이터 새로고침" position="bottom">
+            <ActionIcon
+              size="lg"
+              radius="xl"
+              variant="gradient"
+              gradient={{ from: "cyan", to: "lime", deg: 120 }}
+              onClick={handleRefresh}
+              disabled={isLoading}
+            >
+              <IconRefresh size={18} />
+            </ActionIcon>
+          </Tooltip>
+        </div>
         <header className={styles.header}>
           <div>
             <p className={styles.kicker}>수도권 실거래 인텔리전스</p>
@@ -215,59 +226,7 @@ export default function DealDashboard() {
               한 곳에서 관리합니다.
             </p>
           </div>
-          <Tooltip label="국토부 API 데이터 새로고침" position="bottom">
-            <ActionIcon
-              size="xl"
-              radius="xl"
-              variant="gradient"
-              gradient={{ from: "cyan", to: "lime", deg: 120 }}
-              onClick={handleRefresh}
-              disabled={isLoading}
-            >
-              <IconRefresh size={20} />
-            </ActionIcon>
-          </Tooltip>
         </header>
-
-        <section className={styles.filters}>
-          <div className={styles.filterRow}>
-            <TextInput
-              label="조회 기준 월"
-              type="month"
-              value={selectedMonth}
-              onChange={(event) => setSelectedMonth(event.target.value)}
-              radius="md"
-            />
-            <NumberInput
-              label="상한 예산 (원)"
-              radius="md"
-              value={maxBudget}
-              thousandSeparator=","
-              min={0}
-              step={10_000_000}
-              onChange={(value) => setMaxBudget(Number(value) || 0)}
-            />
-          </div>
-          <div className={styles.filterRow}>
-            <div className={styles.segmentWrapper}>
-              <div className={styles.segmentLabel}>
-                <IconRulerMeasure size={16} />
-                <span>면적 단위</span>
-              </div>
-              <SegmentedControl
-                value={areaUnit}
-                onChange={(value: string) =>
-                  setAreaUnit(value as AreaUnit)
-                }
-                data={AREA_UNIT_OPTIONS}
-                radius="xl"
-              />
-            </div>
-            <div className={styles.filterInfo}>
-              파주 운정(법정동 코드 {region}) 기준 실거래만 조회합니다.
-            </div>
-          </div>
-        </section>
 
         {error && (
           <div className={styles.alert}>
@@ -402,7 +361,7 @@ export default function DealDashboard() {
               <h2>상세 실거래 목록</h2>
             </div>
             <span className={styles.helperText}>
-              예산 조건 이하 {filteredDeals.length}건 표시
+              최근 신고 {deals.length}건 표시
             </span>
           </div>
 
@@ -418,7 +377,7 @@ export default function DealDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {filteredDeals.slice(0, 8).map((deal) => (
+                {deals.slice(0, 8).map((deal) => (
                   <tr key={deal.id}>
                     <td>
                       {format(new Date(deal.contractDate), "yyyy.MM.dd")}
@@ -429,7 +388,7 @@ export default function DealDashboard() {
                     <td>{formatCurrencyKRW(deal.price)}</td>
                   </tr>
                 ))}
-                {filteredDeals.length === 0 && (
+                {deals.length === 0 && (
                   <tr>
                     <td colSpan={5} className={styles.placeholder}>
                       예산 조건에 맞는 계약이 없습니다.
@@ -452,7 +411,7 @@ export default function DealDashboard() {
           <ul className={styles.memoList}>
             <li>
               최근 신고{" "}
-              <strong>{filteredDeals[0]?.apartmentName ?? "단지"}</strong>{" "}
+              <strong>{deals[0]?.apartmentName ?? "단지"}</strong>{" "}
               {summary?.latestPrice
                 ? `${formatCurrencyKRW(summary.latestPrice)} 수준`
                 : "가격 데이터 준비중"}
