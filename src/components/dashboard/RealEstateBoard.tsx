@@ -22,7 +22,13 @@ import {
 import { Line } from "react-chartjs-2";
 import classNames from "classnames";
 import { format } from "date-fns";
-import { ActionIcon, Select, Switch, Tooltip } from "@mantine/core";
+import {
+  ActionIcon,
+  Loader,
+  Select,
+  Switch,
+  Tooltip,
+} from "@mantine/core";
 import {
   IconActivity,
   IconBell,
@@ -61,10 +67,11 @@ ChartJS.register(
 
 const fetcher = async (url: string): Promise<DealsApiResponse> => {
   const res = await fetch(url);
+  const payload = await res.json();
   if (!res.ok) {
-    throw new Error("데이터를 불러오지 못했습니다.");
+    throw new Error(payload?.error ?? "데이터를 불러오지 못했습니다.");
   }
-  return res.json();
+  return payload;
 };
 
 export default function RealEstateBoard() {
@@ -84,14 +91,17 @@ export default function RealEstateBoard() {
 
   const searchKey = `/api/deals?region=${region}&propertyType=${propertyType}&yearMonth=${selectedMonth}`;
 
-  const { data, error, isLoading, mutate } = useSWR<DealsApiResponse>(
-    searchKey,
-    fetcher,
-    {
-      refreshInterval: 1000 * 60 * 10,
-      revalidateOnFocus: false,
-    },
-  );
+  const { data, error, isLoading, isValidating, mutate } =
+    useSWR<DealsApiResponse>(
+      searchKey,
+      fetcher,
+      {
+        refreshInterval: 1000 * 60 * 10,
+        revalidateOnFocus: false,
+        errorRetryCount: 5,
+        errorRetryInterval: 5000,
+      },
+    );
 
   const deals: DealRecord[] = useMemo(() => {
     if (!data?.deals) return [];
@@ -103,7 +113,6 @@ export default function RealEstateBoard() {
   }, [data]);
 
   const summary = data?.summary;
-  const isMock = data?.source !== "api";
   const priceDelta = priceDiffRatio(
     summary?.latestPrice,
     summary?.previousPrice,
@@ -220,6 +229,7 @@ export default function RealEstateBoard() {
               gradient={{ from: "cyan", to: "lime", deg: 120 }}
               onClick={handleRefresh}
               disabled={isLoading}
+              style={{ color: "#03101f" }}
             >
               <IconRefresh size={18} />
             </ActionIcon>
@@ -237,11 +247,13 @@ export default function RealEstateBoard() {
           </div>
         </header>
 
-        {(error || isMock) && (
+        {(error || !data) && (
           <div className={styles.alert}>
             {error
-              ? "데이터를 불러오지 못했습니다. .env 파일에 발급받은 서비스키를 입력했는지 확인해주세요."
-              : "서비스키가 설정되지 않아 현재는 샘플 데이터가 표시되고 있습니다."}
+              ? `국토부 API 오류: ${error.message}${
+                  isValidating ? " · 재시도 중..." : ""
+                }`
+              : "국토부 데이터를 불러오는 중입니다."}
           </div>
         )}
 
@@ -296,11 +308,16 @@ export default function RealEstateBoard() {
               </span>
             </div>
             <div className={styles.chartWrapper}>
-              {summary?.monthlySeries?.length ? (
+              {isLoading && !data ? (
+                <div className={styles.placeholder}>
+                  <Loader color="gray" size="sm" />
+                  <span>데이터를 불러오는 중...</span>
+                </div>
+              ) : summary?.monthlySeries?.length ? (
                 <Line data={priceLineData} options={chartOptions} />
               ) : (
                 <div className={styles.placeholder}>
-                  데이터를 불러오는 중입니다...
+                  최근 월별 데이터가 없습니다.
                 </div>
               )}
             </div>
@@ -365,7 +382,7 @@ export default function RealEstateBoard() {
                   <th>계약일</th>
                   <th>단지/건물</th>
                   <th>면적 ({areaUnit === "sqm" ? "㎡" : "평"})</th>
-                  <th>층</th>
+                  <th>층 (현/총)</th>
                   <th>거래금액</th>
                 </tr>
               </thead>
@@ -377,7 +394,7 @@ export default function RealEstateBoard() {
                     </td>
                     <td>{deal.apartmentName}</td>
                     <td>{formatAreaValue(deal.area)}</td>
-                    <td>{deal.floor ?? "-"}</td>
+                    <td>{formatFloorValue(deal)}</td>
                     <td>{formatCurrencyKRW(deal.price)}</td>
                   </tr>
                 ))}
@@ -456,3 +473,9 @@ function StatCard({
     </div>
   );
 }
+
+const formatFloorValue = (deal: DealRecord) => {
+  const current = deal.floor ?? "-";
+  const total = deal.totalFloors ?? "?";
+  return `${current}/${total}`;
+};

@@ -46,6 +46,8 @@ export const buildMockDeals = ({
           : APT_NAMES[index % APT_NAMES.length],
       area,
       floor: propertyType === "house" ? undefined : `${10 + (index % 15)}층`,
+      totalFloors:
+        propertyType === "house" ? undefined : 25 + (index % 5) * 3,
       contractDate: format(dealDate, "yyyy-MM-dd"),
       price: Math.round(price / 10000) * 10000,
       pricePerSquareMeter: Math.round(price / (area * 3.3058)),

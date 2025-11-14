@@ -6,6 +6,7 @@ export interface DealRecord {
   apartmentName: string;
   area: number;
   floor?: string;
+  totalFloors?: number;
   contractDate: string;
   price: number;
   pricePerSquareMeter: number;
