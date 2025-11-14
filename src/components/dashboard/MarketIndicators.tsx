@@ -2,10 +2,7 @@
 
 import useSWR from "swr";
 import { Loader } from "@mantine/core";
-import {
-  IconFlag,
-  IconWorldDollar,
-} from "@tabler/icons-react";
+import { IconFlag, IconWorldDollar } from "@tabler/icons-react";
 import type { ReactNode } from "react";
 import styles from "./deal-dashboard.module.css";
 
@@ -15,11 +12,7 @@ interface MarketData {
     korea: IndicatorItem;
     us: IndicatorItem;
   };
-  usdKrw: {
-    label: string;
-    value: number;
-    source: string;
-  };
+  usdKrw: IndicatorItem;
   error?: string;
 }
 
@@ -30,10 +23,10 @@ interface IndicatorItem {
 }
 
 const fetcher = async (url: string): Promise<MarketData> => {
-  const res = await fetch(url);
+  const res = await fetch(url, { next: { revalidate: 0 } });
   const data = await res.json();
   if (!res.ok) {
-    throw new Error(data?.error ?? "지표를 불러오지 못했습니다.");
+    throw new Error(data?.error ?? "지표를 불러올 수 없습니다.");
   }
   return data;
 };
@@ -55,7 +48,7 @@ export default function MarketIndicators() {
           </div>
           <span className={styles.updatedAt}>
             {data?.updatedAt
-              ? `업데이트 ${new Date(data.updatedAt).toLocaleDateString("ko-KR")}`
+              ? `업데이트 ${new Date(data.updatedAt).toLocaleString("ko-KR")}`
               : "업데이트 대기"}
           </span>
         </div>

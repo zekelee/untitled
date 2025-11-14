@@ -170,7 +170,6 @@ export default function RealEstateBoard() {
       <div className={styles.inner}>
         <div className={styles.controlsBar}>
           <AreaToggle value={areaUnit} onChange={setAreaUnit} />
-          <RefreshButton loading={isLoading} onClick={handleRefresh} />
         </div>
 
         <header className={styles.header}>
@@ -367,6 +366,9 @@ export default function RealEstateBoard() {
             <li>보금자리론 한도·금리를 맞춰 자금 계획 확정</li>
           </ul>
         </section>
+        <div className={styles.floatingControls}>
+          <RefreshButton loading={isLoading} onClick={handleRefresh} />
+        </div>
       </div>
     </div>
   );

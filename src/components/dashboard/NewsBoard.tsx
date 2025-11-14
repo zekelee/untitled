@@ -60,7 +60,6 @@ export default function NewsBoard() {
               ? `업데이트 ${format(new Date(data.updatedAt), "yyyy.MM.dd HH:mm")}`
               : "업데이트 대기"}
           </span>
-          <RefreshButton loading={isLoading} onClick={handleRefresh} />
         </div>
 
         <header className={styles.header}>
@@ -107,6 +106,10 @@ export default function NewsBoard() {
         </section>
 
         <MarketIndicators />
+
+        <div className={styles.floatingControls}>
+          <RefreshButton loading={isLoading} onClick={handleRefresh} />
+        </div>
 
         <section className={classNames(styles.card, styles.automationCard)}>
           <div className={styles.cardHeader}>
