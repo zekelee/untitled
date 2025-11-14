@@ -19,11 +19,12 @@ export const REGIONS: RegionOption[] = [
   { code: "41570", label: "경기 화성시", shortLabel: "화성시" },
   { code: "41465", label: "경기 하남시", shortLabel: "하남시" },
   { code: "41285", label: "경기 고양시 일산동구", shortLabel: "일산동구" },
+  { code: "41480", label: "경기 파주시 (운정신도시)", shortLabel: "파주시" },
   { code: "42830", label: "인천 연수구", shortLabel: "연수구" },
 ];
 
 export const DEFAULT_REGION =
-  process.env.DEFAULT_REGION_CODE ?? REGIONS[0]?.code ?? "11110";
+  process.env.DEFAULT_REGION_CODE ?? "41480";
 
 export const DEFAULT_PROPERTY_TYPE: PropertyType = "apartment";
 
