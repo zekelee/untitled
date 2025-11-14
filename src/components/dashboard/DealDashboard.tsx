@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, type ReactNode } from "react";
 import useSWR from "swr";
 import {
   CategoryScale,
@@ -10,12 +10,31 @@ import {
   LineElement,
   LinearScale,
   PointElement,
-  Tooltip,
+  Tooltip as ChartTooltip,
   type TooltipItem,
 } from "chart.js";
 import { Line } from "react-chartjs-2";
 import classNames from "classnames";
 import { format } from "date-fns";
+import {
+  ActionIcon,
+  NumberInput,
+  SegmentedControl,
+  Select,
+  Textarea,
+  TextInput,
+  Tooltip,
+} from "@mantine/core";
+import {
+  IconActivity,
+  IconBell,
+  IconCash,
+  IconNote,
+  IconRefresh,
+  IconRulerMeasure,
+  IconScale,
+  IconTrendingUp,
+} from "@tabler/icons-react";
 import {
   DEFAULT_PROPERTY_TYPE,
   DEFAULT_REGION,
@@ -23,7 +42,6 @@ import {
 } from "@/lib/constants";
 import type { DealRecord, DealsApiResponse, PropertyType } from "@/lib/types";
 import {
-  formatArea,
   formatCurrencyKRW,
   formatNumber,
   percentLabel,
@@ -31,12 +49,21 @@ import {
 } from "@/lib/utils";
 import styles from "./deal-dashboard.module.css";
 
+type AreaUnit = "sqm" | "pyeong";
+
+const AREA_UNIT_OPTIONS = [
+  { label: "㎡ (m²)", value: "sqm" },
+  { label: "평 (pyoung)", value: "pyeong" },
+] satisfies { label: string; value: AreaUnit }[];
+
+const PYEONG_RATIO = 3.3058;
+
 ChartJS.register(
   CategoryScale,
   LinearScale,
   PointElement,
   LineElement,
-  Tooltip,
+  ChartTooltip,
   Legend,
   Filler,
 );
@@ -44,7 +71,7 @@ ChartJS.register(
 const fetcher = async (url: string): Promise<DealsApiResponse> => {
   const res = await fetch(url);
   if (!res.ok) {
-    throw new Error("데이터를 불러오는데 실패했습니다.");
+    throw new Error("데이터를 불러오지 못했습니다.");
   }
   return res.json();
 };
@@ -58,6 +85,7 @@ export default function DealDashboard() {
   const initialMonth = toMonthInputValue(currentYearMonth());
   const region = DEFAULT_REGION;
   const propertyType: PropertyType = DEFAULT_PROPERTY_TYPE;
+  const [areaUnit, setAreaUnit] = useState<AreaUnit>("sqm");
   const [selectedMonth, setSelectedMonth] = useState(initialMonth);
   const [maxBudget, setMaxBudget] = useState(1_200_000_000);
   const [alertPrice, setAlertPrice] = useState(950_000_000);
@@ -160,48 +188,85 @@ export default function DealDashboard() {
     mutate();
   }, [mutate]);
 
+  const formatAreaValue = useCallback(
+    (squareMeters: number) => {
+      if (areaUnit === "pyeong") {
+        return `${(squareMeters / PYEONG_RATIO).toFixed(1)}평`;
+      }
+      return `${squareMeters.toFixed(1)}㎡`;
+    },
+    [areaUnit],
+  );
+
+  const areaRangeLabel = summary
+    ? `${formatAreaValue(summary.areaRange[0])} ~ ${formatAreaValue(summary.areaRange[1])}`
+    : "면적 범위";
+
   return (
     <div className={styles.wrapper}>
       <div className={styles.inner}>
         <header className={styles.header}>
           <div>
             <p className={styles.kicker}>수도권 실거래 인텔리전스</p>
-            <h1>매물 모니터링 & 설득 자료</h1>
+            <h1>파주 운정 매물 분석 보드</h1>
             <p className={styles.subtitle}>
-              국토부 실거래가 공개 API를 기반으로 관심 지역의 가격 흐름과
-              신규 계약 사례를 한눈에 확인하고, 가족 설득용 메모까지 정리할 수
-              있는 대시보드입니다.
+              국토부 실거래가 공개 API를 기반으로 파주 운정신도시 아파트 거래
+              흐름을 실시간으로 확인하고, 가족 설득을 위한 메모와 알림 조건을
+              한 곳에서 관리합니다.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={handleRefresh}
-            className={styles.refreshButton}
-            disabled={isLoading}
-          >
-            {isLoading ? "불러오는 중..." : "데이터 새로고침"}
-          </button>
+          <Tooltip label="국토부 API 데이터 새로고침" position="bottom">
+            <ActionIcon
+              size="xl"
+              radius="xl"
+              variant="gradient"
+              gradient={{ from: "cyan", to: "lime", deg: 120 }}
+              onClick={handleRefresh}
+              disabled={isLoading}
+            >
+              <IconRefresh size={20} />
+            </ActionIcon>
+          </Tooltip>
         </header>
 
         <section className={styles.filters}>
-
-          <FilterField label="조회 기준 월">
-            <input
+          <div className={styles.filterRow}>
+            <TextInput
+              label="조회 기준 월"
               type="month"
               value={selectedMonth}
               onChange={(event) => setSelectedMonth(event.target.value)}
+              radius="md"
             />
-          </FilterField>
-
-          <FilterField label="상한 예산 (원)">
-            <input
-              type="number"
+            <NumberInput
+              label="상한 예산 (원)"
+              radius="md"
+              value={maxBudget}
+              thousandSeparator=","
               min={0}
               step={10_000_000}
-              value={maxBudget}
-              onChange={(event) => setMaxBudget(Number(event.target.value))}
+              onChange={(value) => setMaxBudget(Number(value) || 0)}
             />
-          </FilterField>
+          </div>
+          <div className={styles.filterRow}>
+            <div className={styles.segmentWrapper}>
+              <div className={styles.segmentLabel}>
+                <IconRulerMeasure size={16} />
+                <span>면적 단위</span>
+              </div>
+              <SegmentedControl
+                value={areaUnit}
+                onChange={(value: string) =>
+                  setAreaUnit(value as AreaUnit)
+                }
+                data={AREA_UNIT_OPTIONS}
+                radius="xl"
+              />
+            </div>
+            <div className={styles.filterInfo}>
+              파주 운정(법정동 코드 {region}) 기준 실거래만 조회합니다.
+            </div>
+          </div>
         </section>
 
         {error && (
@@ -218,30 +283,30 @@ export default function DealDashboard() {
               summary ? formatCurrencyKRW(summary.averagePrice) : "–"
             }
             helper="최근 신고 기준"
+            icon={<IconActivity size={20} />}
           />
           <StatCard
             label="중위 가격"
             value={summary ? formatCurrencyKRW(summary.medianPrice) : "–"}
             helper="이상/이하 균형 시세"
+            icon={<IconScale size={20} />}
           />
           <StatCard
             label="전월 대비"
             value={percentLabel(priceDelta)}
             helper={
               summary?.latestPrice && summary?.previousPrice
-                ? `${formatCurrencyKRW(summary.latestPrice)} ↔ ${formatCurrencyKRW(summary.previousPrice)}`
+                ? `${formatCurrencyKRW(summary.latestPrice)} → ${formatCurrencyKRW(summary.previousPrice)}`
                 : "직전 신고 대비"
             }
             positive={priceDelta >= 0}
+            icon={<IconTrendingUp size={20} />}
           />
           <StatCard
             label="계약 건수"
             value={summary ? formatNumber(summary.totalDeals) : "0"}
-            helper={
-              summary
-                ? `${summary.areaRange[0].toFixed(1)}㎡ ~ ${summary.areaRange[1].toFixed(1)}㎡`
-                : "면적 범위"
-            }
+            helper={summary ? areaRangeLabel : "면적 범위"}
+            icon={<IconCash size={20} />}
           />
         </section>
 
@@ -278,40 +343,38 @@ export default function DealDashboard() {
                 <p className={styles.cardKicker}>알림 조건</p>
                 <h2>매물 알림 & 메모</h2>
               </div>
+              <IconBell size={20} />
             </div>
-            <label className={styles.fieldLabel}>
-              목표 알림가
-              <input
-                type="number"
-                min={0}
-                value={alertPrice}
-                onChange={(event) => setAlertPrice(Number(event.target.value))}
-              />
-              <small>
-                {alertPrice
-                  ? `약 ${(alertPrice / 100_000_000).toFixed(1)}억 수준`
-                  : "원 단위로 입력"}
-              </small>
-            </label>
-            <label className={styles.fieldLabel}>
-              알림 채널
-              <select
-                value={alertChannel}
-                onChange={(event) => setAlertChannel(event.target.value)}
-              >
-                <option value="kakao">카카오톡 봇</option>
-                <option value="email">이메일 리포트</option>
-                <option value="sms">문자 메시지</option>
-              </select>
-            </label>
-            <label className={styles.fieldLabel}>
-              가족 설득 메모
-              <textarea
-                value={memo}
-                onChange={(event) => setMemo(event.target.value)}
-                rows={5}
-              />
-            </label>
+            <NumberInput
+              label="목표 알림가"
+              value={alertPrice}
+              onChange={(value) => setAlertPrice(Number(value) || 0)}
+              thousandSeparator=","
+              min={0}
+              step={10_000_000}
+              radius="md"
+            />
+            <Select
+              label="알림 채널"
+              data={[
+                { label: "카카오톡 봇", value: "kakao" },
+                { label: "이메일 리포트", value: "email" },
+                { label: "문자 메시지", value: "sms" },
+              ]}
+              value={alertChannel}
+              onChange={(value) =>
+                setAlertChannel(value ?? alertChannel)
+              }
+              radius="md"
+            />
+            <Textarea
+              label="가족 설득 메모"
+              value={memo}
+              onChange={(event) => setMemo(event.currentTarget.value)}
+              minRows={4}
+              radius="md"
+              autosize
+            />
             <div className={styles.alertSummary}>
               {summary?.latestPrice ? (
                 <>
@@ -349,7 +412,7 @@ export default function DealDashboard() {
                 <tr>
                   <th>계약일</th>
                   <th>단지/건물</th>
-                  <th>면적</th>
+                  <th>면적 ({areaUnit === "sqm" ? "㎡" : "평"})</th>
                   <th>층</th>
                   <th>거래금액</th>
                 </tr>
@@ -361,7 +424,7 @@ export default function DealDashboard() {
                       {format(new Date(deal.contractDate), "yyyy.MM.dd")}
                     </td>
                     <td>{deal.apartmentName}</td>
-                    <td>{formatArea(deal.area)}</td>
+                    <td>{formatAreaValue(deal.area)}</td>
                     <td>{deal.floor ?? "-"}</td>
                     <td>{formatCurrencyKRW(deal.price)}</td>
                   </tr>
@@ -384,10 +447,12 @@ export default function DealDashboard() {
               <p className={styles.cardKicker}>가족 공유 포인트</p>
               <h2>투자 근거 요약</h2>
             </div>
+            <IconNote size={20} />
           </div>
           <ul className={styles.memoList}>
             <li>
-              최근 신고 {filteredDeals[0]?.apartmentName ?? "단지"}{" "}
+              최근 신고{" "}
+              <strong>{filteredDeals[0]?.apartmentName ?? "단지"}</strong>{" "}
               {summary?.latestPrice
                 ? `${formatCurrencyKRW(summary.latestPrice)} 수준`
                 : "가격 데이터 준비중"}
@@ -398,7 +463,7 @@ export default function DealDashboard() {
               {summary ? formatCurrencyKRW(summary.averagePrice) : "–"} /
               전월 대비 {percentLabel(priceDelta)} 흐름
             </li>
-            <li>알림 기준가 {formatCurrencyKRW(alertPrice)} 설정 완료</li>
+            <li>면적 단위: {areaUnit === "sqm" ? "제곱미터" : "평"}</li>
             <li>
               메모: <span>{memo}</span>
             </li>
@@ -409,46 +474,36 @@ export default function DealDashboard() {
   );
 }
 
-function FilterField({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <label className={styles.filterField}>
-      <span>{label}</span>
-      {children}
-    </label>
-  );
-}
-
 function StatCard({
   label,
   value,
   helper,
   positive,
+  icon,
 }: {
   label: string;
   value: string;
   helper?: string;
   positive?: boolean;
+  icon?: ReactNode;
 }) {
   return (
     <div className={styles.statCard}>
-      <p className={styles.statLabel}>{label}</p>
-      <p className={styles.statValue}>{value}</p>
-      {helper && (
-        <p
-          className={classNames(styles.statHelper, {
-            [styles.statPositive]: positive,
-            [styles.statNegative]: positive === false,
-          })}
-        >
-          {helper}
-        </p>
-      )}
+      <div className={styles.statIcon}>{icon}</div>
+      <div>
+        <p className={styles.statLabel}>{label}</p>
+        <p className={styles.statValue}>{value}</p>
+        {helper && (
+          <p
+            className={classNames(styles.statHelper, {
+              [styles.statPositive]: positive,
+              [styles.statNegative]: positive === false,
+            })}
+          >
+            {helper}
+          </p>
+        )}
+      </div>
     </div>
   );
 }
