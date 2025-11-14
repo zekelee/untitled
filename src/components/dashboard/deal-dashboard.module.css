@@ -33,24 +33,6 @@
   line-height: 1.5;
 }
 
-.refreshButton {
-  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-  color: #050607;
-  border: none;
-  border-radius: 999px;
-  padding: 0.65rem 1.5rem;
-  font-weight: 600;
-  cursor: pointer;
-  box-shadow: var(--shadow);
-  transition: opacity 0.2s ease;
-  align-self: flex-start;
-}
-
-.refreshButton:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
 .floatingMenu {
   position: sticky;
   top: 1rem;
@@ -273,6 +255,92 @@
   margin-top: 0.2rem;
 }
 
+.extraGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.newsList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.newsItem {
+  padding: 0.85rem;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.newsMeta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.newsTitle {
+  margin-top: 0.4rem;
+  font-weight: 600;
+}
+
+.newsSummary {
+  margin-top: 0.3rem;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.loanGrid {
+  margin-top: 1rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.8rem;
+}
+
+.loanItem {
+  padding: 0.75rem;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--card-highlight);
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.loanItem p {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.loanItem strong {
+  font-size: 1.1rem;
+}
+
+.loanItem span {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.automationList {
+  margin-top: 0.8rem;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.automationList li::before {
+  content: "->";
+  margin-right: 0.35rem;
+  color: var(--accent);
+}
+
 @media (min-width: 768px) {
   .wrapper {
     padding: 3rem 0 4rem;
@@ -288,14 +356,10 @@
     justify-content: space-between;
   }
 
-  .filters {
-    padding: 1.5rem;
-  }
-
-  .statsGrid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
 
   .split {
     display: grid;
@@ -303,8 +367,17 @@
     gap: 1.25rem;
   }
 
-  .cardHeader {
-    flex-direction: row;
+.cardHeader {
+  flex-direction: row;
+}
+
+  .extraGrid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .extraGrid > :last-child {
+    grid-column: span 2;
   }
 }
 

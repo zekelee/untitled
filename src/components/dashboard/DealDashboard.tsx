@@ -18,7 +18,6 @@ import classNames from "classnames";
 import { format } from "date-fns";
 import {
   ActionIcon,
-  NumberInput,
   SegmentedControl,
   Select,
   Textarea,
@@ -27,7 +26,9 @@ import {
 import {
   IconActivity,
   IconBell,
-  IconCash,
+  IconBriefcase,
+  IconHomeSearch,
+  IconNews,
   IconNote,
   IconRefresh,
   IconRulerMeasure,
@@ -52,10 +53,67 @@ type AreaUnit = "sqm" | "pyeong";
 
 const AREA_UNIT_OPTIONS = [
   { label: "㎡ (m²)", value: "sqm" },
-  { label: "평 (pyoung)", value: "pyeong" },
+  { label: "평 (py)", value: "pyeong" },
 ] satisfies { label: string; value: AreaUnit }[];
 
 const PYEONG_RATIO = 3.3058;
+
+const NEWS_ITEMS = [
+  {
+    title: "운정신도시 GTX-A 개통 앞두고 역세권 매물 관심↑",
+    summary:
+      "운정역 일대 신규 입주단지와 기존 브랜드 아파트 중심으로 신고가 거래가 이어지고 있습니다.",
+    source: "매일경제",
+    publishedAt: "2025-02-18",
+    link: "#",
+  },
+  {
+    title: "파주 운정, 신혼부부 특화 공공분양 2분기 공급 예고",
+    summary:
+      "신혼희망타운 잔여 물량과 공공분양 계획이 확정되면서 전세·매매 수요가 동시에 움직이고 있습니다.",
+    source: "연합인포맥스",
+    publishedAt: "2025-02-15",
+    link: "#",
+  },
+  {
+    title: "운정 호수공원 생활권 리모델링 추진 단지 리스트",
+    summary:
+      "준공 15년 이상 단지를 중심으로 리모델링 조합이 출범해 중대형 위주로 매수 문의가 늘었습니다.",
+    source: "국토경제신문",
+    publishedAt: "2025-02-12",
+    link: "#",
+  },
+];
+
+const LOAN_POINTS = [
+  {
+    label: "대출 한도",
+    value: "최대 4.7억",
+    helper: "생애최초 + 2인 이상 가구 기준",
+  },
+  {
+    label: "우대 금리",
+    value: "연 3.45%~",
+    helper: "신혼부부·다자녀 우대 적용 시",
+  },
+  {
+    label: "LTV / DTI",
+    value: "70% / 60%",
+    helper: "비규제지역·시가 9억 이하",
+  },
+  {
+    label: "거치 · 상환",
+    value: "거치 3년 / 30년 분할",
+    helper: "중도상환수수료 3년간 1.2% → 0%",
+  },
+];
+
+const AUTOMATION_STEPS = [
+  "국토부 실거래 API + 부동산 플랫폼 신규 매물 크롤러 결합",
+  "조건: 운정신도시, 전용 84㎡±, 매매가 9억 이하",
+  "트리거 시 카카오톡 봇 메시지 & 이메일 리포트 발송",
+  "향후: Slack/Discord 채널, 가족 단톡방 공유 자동화",
+];
 
 ChartJS.register(
   CategoryScale,
@@ -80,10 +138,10 @@ export default function DealDashboard() {
   const propertyType: PropertyType = DEFAULT_PROPERTY_TYPE;
   const [areaUnit, setAreaUnit] = useState<AreaUnit>("sqm");
   const selectedMonth = currentYearMonth();
-  const [alertPrice, setAlertPrice] = useState(950_000_000);
+  const alertPrice = 950_000_000;
   const [alertChannel, setAlertChannel] = useState("kakao");
   const [memo, setMemo] = useState(
-    "부모님 지원 2억 포함 자금 계획과 실거래 추이 설명 자료 준비",
+    "부모님 지원 2억과 생애최초 보금자리론을 조합해 운정 역세권 대형 평형을 노린다.",
   );
 
   const searchKey = `/api/deals?region=${region}&propertyType=${propertyType}&yearMonth=${selectedMonth}`;
@@ -159,7 +217,7 @@ export default function DealDashboard() {
         y: {
           ticks: {
             color: "var(--muted)",
-            callback: (value: string | number) =>
+            callback: (value: number | string) =>
               `${Number(value) / 100_000_000}억`,
           },
           grid: {
@@ -216,14 +274,15 @@ export default function DealDashboard() {
             </ActionIcon>
           </Tooltip>
         </div>
+
         <header className={styles.header}>
           <div>
-            <p className={styles.kicker}>수도권 실거래 인텔리전스</p>
-            <h1>파주 운정 매물 분석 보드</h1>
+            <p className={styles.kicker}>이진규 집사기 프로젝트</p>
+            <h1>운정 아파트 집중 모니터링</h1>
             <p className={styles.subtitle}>
-              국토부 실거래가 공개 API를 기반으로 파주 운정신도시 아파트 거래
-              흐름을 실시간으로 확인하고, 가족 설득을 위한 메모와 알림 조건을
-              한 곳에서 관리합니다.
+              파주 운정신도시 실거래가 흐름, 부동산 뉴스, 생애최초
+              보금자리론 전략, 카카오톡 알림까지 한 화면에서 정리된
+              개인 맞춤형 인사이트 보드입니다.
             </p>
           </div>
         </header>
@@ -265,7 +324,7 @@ export default function DealDashboard() {
             label="계약 건수"
             value={summary ? formatNumber(summary.totalDeals) : "0"}
             helper={summary ? areaRangeLabel : "면적 범위"}
-            icon={<IconCash size={20} />}
+            icon={<IconHomeSearch size={20} />}
           />
         </section>
 
@@ -274,7 +333,7 @@ export default function DealDashboard() {
             <div className={styles.cardHeader}>
               <div>
                 <p className={styles.cardKicker}>가격 추이</p>
-                <h2>실거래 평균</h2>
+                <h2>운정 실거래 평균</h2>
               </div>
               <span className={styles.updatedAt}>
                 {summary
@@ -300,19 +359,10 @@ export default function DealDashboard() {
             <div className={styles.cardHeader}>
               <div>
                 <p className={styles.cardKicker}>알림 조건</p>
-                <h2>매물 알림 & 메모</h2>
+                <h2>카카오봇 & 이메일 리포트</h2>
               </div>
               <IconBell size={20} />
             </div>
-            <NumberInput
-              label="목표 알림가"
-              value={alertPrice}
-              onChange={(value) => setAlertPrice(Number(value) || 0)}
-              thousandSeparator=","
-              min={0}
-              step={10_000_000}
-              radius="md"
-            />
             <Select
               label="알림 채널"
               data={[
@@ -341,7 +391,7 @@ export default function DealDashboard() {
                     최근 신고가 {formatCurrencyKRW(summary.latestPrice)}
                   </span>
                   <span>
-                    목표 대비{" "}
+                    목표 {formatCurrencyKRW(alertPrice)} 대비{" "}
                     {percentLabel(
                       priceDiffRatio(alertPrice, summary.latestPrice),
                     )}
@@ -361,7 +411,7 @@ export default function DealDashboard() {
               <h2>상세 실거래 목록</h2>
             </div>
             <span className={styles.helperText}>
-              최근 신고 {deals.length}건 표시
+              최근 신고 {deals.length}건
             </span>
           </div>
 
@@ -391,7 +441,7 @@ export default function DealDashboard() {
                 {deals.length === 0 && (
                   <tr>
                     <td colSpan={5} className={styles.placeholder}>
-                      예산 조건에 맞는 계약이 없습니다.
+                      운정 아파트 실거래를 불러오는 중입니다.
                     </td>
                   </tr>
                 )}
@@ -427,6 +477,64 @@ export default function DealDashboard() {
               메모: <span>{memo}</span>
             </li>
           </ul>
+        </section>
+
+        <section className={styles.extraGrid}>
+          <div className={classNames(styles.card, styles.newsCard)}>
+            <div className={styles.cardHeader}>
+              <div>
+                <p className={styles.cardKicker}>운정 이슈 브리핑</p>
+                <h2>부동산 뉴스 클리핑</h2>
+              </div>
+              <IconNews size={20} />
+            </div>
+            <ul className={styles.newsList}>
+              {NEWS_ITEMS.map((item) => (
+                <li key={item.title} className={styles.newsItem}>
+                  <div className={styles.newsMeta}>
+                    <span>{item.source}</span>
+                    <span>{format(new Date(item.publishedAt), "MM.dd")}</span>
+                  </div>
+                  <p className={styles.newsTitle}>{item.title}</p>
+                  <p className={styles.newsSummary}>{item.summary}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className={classNames(styles.card, styles.loanCard)}>
+            <div className={styles.cardHeader}>
+              <div>
+                <p className={styles.cardKicker}>생애최초 보금자리론</p>
+                <h2>대출 전략 요약</h2>
+              </div>
+              <IconBriefcase size={20} />
+            </div>
+            <div className={styles.loanGrid}>
+              {LOAN_POINTS.map((item) => (
+                <div key={item.label} className={styles.loanItem}>
+                  <p>{item.label}</p>
+                  <strong>{item.value}</strong>
+                  <span>{item.helper}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className={classNames(styles.card, styles.automationCard)}>
+            <div className={styles.cardHeader}>
+              <div>
+                <p className={styles.cardKicker}>자동화 로드맵</p>
+                <h2>운정 매물 알림 계획</h2>
+              </div>
+              <IconHomeSearch size={20} />
+            </div>
+            <ul className={styles.automationList}>
+              {AUTOMATION_STEPS.map((step) => (
+                <li key={step}>{step}</li>
+              ))}
+            </ul>
+          </div>
         </section>
       </div>
     </div>

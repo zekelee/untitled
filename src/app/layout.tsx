@@ -15,9 +15,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "수도권 실거래 인사이트",
+  title: "이진규 집사기 프로젝트",
   description:
-    "국토부 실거래가 API를 활용한 수도권 주택 매물 모니터링 · 가족 설득용 자료 대시보드",
+    "운정신도시 아파트 실거래 모니터링, 보금자리론 전략, 매물 알림 자동화를 한눈에 정리한 개인 맞춤 보드",
 };
 
 export default function RootLayout({
