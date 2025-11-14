@@ -1,37 +1,37 @@
-import classNames from "classnames";
+﻿import classNames from "classnames";
 import { format } from "date-fns";
 import { IconNews, IconHomeSearch } from "@tabler/icons-react";
 import styles from "./deal-dashboard.module.css";
 
 const NEWS_ITEMS = [
   {
-    title: "기준금리 동결…주담대 금리 3%대 초반 복귀",
+    title: "한은, 5월 금통위서 기준금리 동결…주담대 3%대 유지",
     summary:
-      "한국은행이 기준금리를 동결하면서 시중은행 주담대가 3%대 초반으로 내려가 매수 심리에 호재가 되고 있습니다.",
+      "기준금리가 동결되면서 시중은행 주담대 금리가 3%대 초반을 유지, 무주택자의 매수 심리가 다시 살아나고 있습니다.",
     source: "연합인포맥스",
-    publishedAt: "2025-02-19",
+    publishedAt: "2025-05-16",
   },
   {
-    title: "GTX-A 연장 및 수도권 광역 철도망 예산 확정",
+    title: "GTX-A 파주 연장안 재추진, 운정 역세권 개발 속도",
     summary:
-      "GTX-A와 B 노선 예산이 확정되면서 수도권 서북부 교통 호재가 다시 부각되고 있습니다.",
+      "국토부가 GTX-A 추가 연장안을 검토 중이라고 밝히면서 운정 역세권 복합개발 사업이 탄력을 받고 있습니다.",
     source: "한국경제",
-    publishedAt: "2025-02-18",
+    publishedAt: "2025-05-14",
   },
   {
-    title: "부동산 PF 연착륙 정책 발표, 중대형 건설사 숨통",
+    title: "PF 연착륙 2단계 대책 발표…분양 시장 불확실성 완화",
     summary:
-      "정부가 PF 보증 확대와 대환 프로그램을 발표하면서 공급 차질 우려가 완화돼 분양 시장이 안정되는 분위기입니다.",
+      "정부가 PF 보증 확대와 대환 프로그램을 추가 발표하며 대형 건설사의 자금 부담이 줄어들 전망입니다.",
     source: "매일경제",
-    publishedAt: "2025-02-17",
+    publishedAt: "2025-05-12",
   },
 ];
 
 const AUTOMATION_STEPS = [
-  "국토부 실거래 API 데이터 적재 (주기: 3시간)",
-  "네이버부동산/직방 신규 매물 크롤링 → 운정 필터",
-  "카카오톡 챗봇 + 이메일로 신규 매물 요약 발송",
-  "향후: Slack/Discord 채널로 확장, 가족 단톡 자동 공유",
+  "국토부 실거래 API 주기적 적재 (3시간 간격)",
+  "네이버부동산·직방 신규 매물 크롤링 → 운정 필터 적용",
+  "카카오봇/이메일로 신규 매물 요약 발송",
+  "향후: Slack/Discord 채널, 가족 단톡 자동 공유",
 ];
 
 export default function NewsBoard() {
@@ -40,11 +40,10 @@ export default function NewsBoard() {
       <div className={styles.inner}>
         <header className={styles.header}>
           <div>
-            <p className={styles.kicker}>운정 현장 브리핑</p>
-            <h1>뉴스 & 매물 자동화 계획</h1>
+            <p className={styles.kicker}>시장 브리핑</p>
+            <h1>부동산 뉴스 & 자동화 계획</h1>
             <p className={styles.subtitle}>
-              실거래 외에도 시장 분위기를 빠르게 파악할 수 있도록 운정
-              관련 뉴스 클리핑과 매물 알림 로드맵을 정리했습니다.
+              금리·GTX·PF 등 주요 이슈를 모아 보고, 카카오봇 매물 알림 계획을 정리했습니다.
             </p>
           </div>
         </header>
@@ -52,7 +51,7 @@ export default function NewsBoard() {
         <section className={classNames(styles.card, styles.newsCard)}>
           <div className={styles.cardHeader}>
             <div>
-              <p className={styles.cardKicker}>운정 이슈</p>
+              <p className={styles.cardKicker}>최신 이슈</p>
               <h2>부동산 뉴스 클리핑</h2>
             </div>
             <IconNews size={20} />
