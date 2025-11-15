@@ -335,14 +335,6 @@ export default function DealDashboard() {
                 <p className={styles.cardKicker}>가격 추이</p>
                 <h2>운정 실거래 평균</h2>
               </div>
-              <span className={styles.updatedAt}>
-                {summary
-                  ? `업데이트 ${format(
-                      new Date(summary.updatedAt),
-                      "MM월 dd일 HH:mm",
-                    )}`
-                  : "업데이트 준비중"}
-              </span>
             </div>
             <div className={styles.chartWrapper}>
               {summary?.monthlySeries?.length ? (
@@ -352,6 +344,11 @@ export default function DealDashboard() {
                   데이터를 불러오는 중입니다...
                 </div>
               )}
+            </div>
+            <div className={styles.chartTimestamp}>
+              {summary
+                ? `업데이트 ${format(new Date(summary.updatedAt), "MM월 dd일 HH:mm")}`
+                : "업데이트 준비 중"}
             </div>
           </div>
 

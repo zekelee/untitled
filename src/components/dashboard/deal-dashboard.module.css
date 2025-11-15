@@ -295,6 +295,13 @@
   font-size: 0.9rem;
 }
 
+.chartTimestamp {
+  margin-top: 0.75rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+  text-align: right;
+}
+
 .chartWrapper {
   margin-top: 1rem;
   width: 100%;

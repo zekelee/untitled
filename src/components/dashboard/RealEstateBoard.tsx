@@ -364,11 +364,6 @@ export default function RealEstateBoard() {
                 <p className={styles.cardKicker}>가격 추세</p>
                 <h2>월평균 거래가 차트</h2>
               </div>
-              <span className={styles.updatedAt}>
-                {summary
-                  ? `업데이트 ${format(new Date(summary.updatedAt), "MM월 dd일 HH:mm")}`
-                  : "업데이트 준비 중"}
-              </span>
             </div>
             <div className={styles.chartWrapper}>
               {hasChartSeries ? (
@@ -384,6 +379,11 @@ export default function RealEstateBoard() {
                   표시 가능한 월별 데이터가 부족합니다.
                 </div>
               )}
+            </div>
+            <div className={styles.chartTimestamp}>
+              {summary
+                ? `업데이트 ${format(new Date(summary.updatedAt), "MM월 dd일 HH:mm")}`
+                : "업데이트 준비 중"}
             </div>
           </div>
 
