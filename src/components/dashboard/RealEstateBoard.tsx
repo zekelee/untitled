@@ -229,7 +229,7 @@ export default function RealEstateBoard() {
     [],
   );
 
-  const hasChartSeries = (summary?.monthlySeries?.length ?? 0) >= 2;
+  const hasChartSeries = (summary?.monthlySeries?.length ?? 0) >= 1;
 
   const handleRefresh = useCallback(() => {
     mutate();
