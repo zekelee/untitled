@@ -70,11 +70,6 @@ export default function MarketIndicators() {
             <p className={styles.cardKicker}>거시 지표</p>
             <h2>금리 & 환율 브리핑</h2>
           </div>
-          <span className={styles.updatedAt}>
-            {data?.updatedAt
-              ? `업데이트 ${new Date(data.updatedAt).toLocaleString("ko-KR")}`
-              : "업데이트 준비 중"}
-          </span>
         </div>
 
         {isLoading && (
