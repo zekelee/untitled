@@ -567,6 +567,12 @@
   font-size: 0;
 }
 
+ .tableCard .pagination {
+   margin-left: -1.5rem;
+   margin-right: -1.5rem;
+   padding: 0;
+ }
+
 .activePageButton {
   background: linear-gradient(135deg, var(--accent), var(--accent-strong));
   color: #03101f;
@@ -616,6 +622,9 @@
 
   .pagination {
     gap: 0.2rem;
+    margin-left: -1.5rem;
+    margin-right: -1.5rem;
+    padding: 0;
   }
 
   .pagination button {
