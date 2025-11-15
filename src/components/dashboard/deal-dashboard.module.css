@@ -462,6 +462,51 @@
   color: var(--muted);
 }
 
+.skeletonWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.skeletonRow {
+  height: 24px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  animation: pulse 1.4s ease infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0.4;
+  }
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8rem;
+  color: var(--muted);
+}
+
+.emptyState svg {
+  color: var(--accent);
+}
+
+.emptyState button {
+  padding: 0.55rem 1.2rem;
+  border-radius: 999px;
+  border: none;
+  background: rgba(90, 200, 250, 0.15);
+  color: var(--foreground);
+  cursor: pointer;
+}
 .automationList {
   margin-top: 0.8rem;
   list-style: none;

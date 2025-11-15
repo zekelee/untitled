@@ -48,6 +48,11 @@ import LoadingOverlay from "./LoadingOverlay";
 import styles from "./deal-dashboard.module.css";
 
 const PYEONG_RATIO = 3.3058;
+const CTA_TARGET_ID = "deals-table";
+
+type AreaFilter = "all" | "59" | "84";
+type YearFilter = "all" | "new" | "mid" | "old";
+type SortOrder = "none" | "price-asc" | "price-desc" | "recent";
 
 ChartJS.register(
   CategoryScale,
@@ -68,22 +73,20 @@ const fetcher = async (url: string): Promise<DealsApiResponse> => {
   return payload;
 };
 
-const CTA_TARGET_ID = "deals-table";
-
-type AreaFilter = "all" | "59" | "84";
-type YearFilter = "all" | "new" | "mid" | "old";
-
 export default function RealEstateBoard() {
   const region = DEFAULT_REGION;
   const propertyType: PropertyType = DEFAULT_PROPERTY_TYPE;
+  const selectedMonth = currentYearMonth();
+  const currentYear = new Date().getFullYear();
+
   const [areaUnit, setAreaUnit] = useState<AreaUnit>("sqm");
   const [alertChannel, setAlertChannel] = useState("kakao");
-  const selectedMonth = currentYearMonth();
-  const alertPrice = 950_000_000;
-  const currentYear = useMemo(() => new Date().getFullYear(), []);
   const [areaFilter, setAreaFilter] = useState<AreaFilter>("all");
   const [yearFilter, setYearFilter] = useState<YearFilter>("all");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("none");
   const [isPending, startTransition] = useTransition();
+
+  const alertPrice = 950_000_000;
 
   const searchKey = `/api/deals?region=${region}&propertyType=${propertyType}&yearMonth=${selectedMonth}`;
 
@@ -98,13 +101,14 @@ export default function RealEstateBoard() {
     },
   );
 
-  const deals: DealRecord[] = useMemo(() => {
-    if (!data?.deals) return [];
-    return [...data.deals].sort(
+  const rawDeals = useMemo(() => data?.deals ?? [], [data?.deals]);
+
+  const deals = useMemo(() => {
+    return [...rawDeals].sort(
       (a, b) =>
         new Date(b.contractDate).getTime() - new Date(a.contractDate).getTime(),
     );
-  }, [data]);
+  }, [rawDeals]);
 
   const filteredDeals = useMemo(() => {
     return deals.filter((deal) => {
@@ -127,6 +131,23 @@ export default function RealEstateBoard() {
       return areaMatch && yearMatch;
     });
   }, [deals, areaFilter, yearFilter, currentYear]);
+
+  const sortedDeals = useMemo(() => {
+    const base = [...filteredDeals];
+    switch (sortOrder) {
+      case "price-asc":
+        return base.sort((a, b) => a.price - b.price);
+      case "price-desc":
+        return base.sort((a, b) => b.price - a.price);
+      case "recent":
+        return base.sort(
+          (a, b) =>
+            new Date(b.contractDate).getTime() - new Date(a.contractDate).getTime(),
+        );
+      default:
+        return base;
+    }
+  }, [filteredDeals, sortOrder]);
 
   const summary = data?.summary;
   const priceDelta = priceDiffRatio(
@@ -213,13 +234,34 @@ export default function RealEstateBoard() {
     ? `${formatAreaValue(summary.areaRange[0])} ~ ${formatAreaValue(summary.areaRange[1])}`
     : "면적 정보 없음";
 
+  const resetFilters = () => {
+    startTransition(() => {
+      setAreaFilter("all");
+      setYearFilter("all");
+      setSortOrder("none");
+    });
+  };
+
   const renderNoDealsMessage = () => (
     <tr>
       <td colSpan={8} className={styles.placeholder}>
-        조건에 맞는 매물이 없습니다. 조건을 완화하거나 다른 평형·준공연도를 선택해 보세요.
+        <div className={styles.emptyState}>
+          <svg width="32" height="32" viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              fill="currentColor"
+              d="M5 4h14a1 1 0 0 1 .97 1.24l-2.5 10A1 1 0 0 1 16.5 16H7.5a1 1 0 0 1-.97-.76L4 5.24A1 1 0 0 1 5 4zm2.11 2 2 8h7.78l2-8zM9 20a1 1 0 1 1 0-2h6a1 1 0 1 1 0 2z"
+            />
+          </svg>
+          <p>조건을 완화하거나 다른 평형·준공연도를 선택해 보세요.</p>
+          <button type="button" onClick={resetFilters}>
+            필터 초기화
+          </button>
+        </div>
       </td>
     </tr>
   );
+
+  const showSkeleton = (isPending || isLoading) && !error;
 
   return (
     <div className={styles.wrapper}>
@@ -246,52 +288,18 @@ export default function RealEstateBoard() {
           </div>
         )}
 
-        <div className={styles.filterControls}>
-          <label>
-            평형 선택
-            <select
-              value={areaFilter}
-              onChange={(event) =>
-                startTransition(() =>
-                  setAreaFilter(event.target.value as AreaFilter),
-                )
-              }
-            >
-              <option value="all">전체</option>
-              <option value="59">59㎡</option>
-              <option value="84">84㎡</option>
-            </select>
-          </label>
-          <label>
-            준공연도
-            <select
-              value={yearFilter}
-              onChange={(event) =>
-                startTransition(() =>
-                  setYearFilter(event.target.value as YearFilter),
-                )
-              }
-            >
-              <option value="all">전체</option>
-              <option value="new">신축 (0~5년)</option>
-              <option value="mid">5~10년</option>
-              <option value="old">10년 이상</option>
-            </select>
-          </label>
-        </div>
-
         <section className={styles.statsGrid}>
           <StatCard
             label="평균 실거래가"
             value={summary ? formatKoreanPrice(summary.averagePrice) : "정보 없음"}
             helper="최근 집계 기준"
-            icon={<IconActivity size={20} />}
+            icon={<IconActivity aria-hidden="true" size={20} />}
           />
           <StatCard
             label="중위 실거래가"
             value={summary ? formatKoreanPrice(summary.medianPrice) : "정보 없음"}
             helper="이상치 제거 기준"
-            icon={<IconScale size={20} />}
+            icon={<IconScale aria-hidden="true" size={20} />}
           />
           <StatCard
             label="등락률"
@@ -302,13 +310,13 @@ export default function RealEstateBoard() {
                 : "직전 거래 대비"
             }
             positive={priceDelta >= 0}
-            icon={<IconTrendingUp size={20} />}
+            icon={<IconTrendingUp aria-hidden="true" size={20} />}
           />
           <StatCard
             label="최근 거래 건수"
             value={summary ? formatNumber(summary.totalDeals) : "0"}
             helper={summary ? areaRangeLabel : "면적 표준화 중"}
-            icon={<IconHomeSearch size={20} />}
+            icon={<IconHomeSearch aria-hidden="true" size={20} />}
           />
         </section>
 
@@ -352,7 +360,7 @@ export default function RealEstateBoard() {
                 <p className={styles.cardKicker}>알림 채널</p>
                 <h2>카카오/이메일 가격 감시</h2>
               </div>
-              <IconBell size={20} />
+              <IconBell aria-hidden="true" size={20} />
             </div>
             <select
               className={styles.alertSelect}
@@ -377,13 +385,11 @@ export default function RealEstateBoard() {
                 <span>실거래가를 불러온 뒤 자동으로 벤치마크가 계산됩니다.</span>
               )}
             </div>
+            <p className={styles.helperText}>카카오 알림 서비스 준비 중입니다.</p>
           </div>
         </section>
 
-        <section
-          className={classNames(styles.card, styles.tableCard)}
-          id={CTA_TARGET_ID}
-        >
+        <section className={classNames(styles.card, styles.tableCard)} id={CTA_TARGET_ID}>
           <LoadingOverlay
             visible={isLoading && !!data}
             label="실거래 목록을 정리하는 중..."
@@ -393,7 +399,59 @@ export default function RealEstateBoard() {
               <p className={styles.cardKicker}>최신 계약</p>
               <h2>운정신도시 실거래</h2>
             </div>
-            <span className={styles.helperText}>조건 일치 {filteredDeals.length}건</span>
+            <span className={styles.helperText}>조건 일치 {sortedDeals.length}건</span>
+          </div>
+          <div className={styles.filterControls}>
+            <label htmlFor="area-filter">
+              평형 선택
+              <select
+                id="area-filter"
+                value={areaFilter}
+                onChange={(event) =>
+                  startTransition(() =>
+                    setAreaFilter(event.target.value as AreaFilter),
+                  )
+                }
+              >
+                <option value="all">전체</option>
+                <option value="59">59㎡</option>
+                <option value="84">84㎡</option>
+              </select>
+            </label>
+            <label htmlFor="year-filter">
+              준공연도
+              <select
+                id="year-filter"
+                value={yearFilter}
+                onChange={(event) =>
+                  startTransition(() =>
+                    setYearFilter(event.target.value as YearFilter),
+                  )
+                }
+              >
+                <option value="all">전체</option>
+                <option value="new">신축 (0~5년)</option>
+                <option value="mid">5~10년</option>
+                <option value="old">10년 이상</option>
+              </select>
+            </label>
+            <label htmlFor="sort-order">
+              정렬
+              <select
+                id="sort-order"
+                value={sortOrder}
+                onChange={(event) =>
+                  startTransition(() =>
+                    setSortOrder(event.target.value as SortOrder),
+                  )
+                }
+              >
+                <option value="none">정렬 없음</option>
+                <option value="price-asc">가격 낮은순</option>
+                <option value="price-desc">가격 높은순</option>
+                <option value="recent">최근 등록순</option>
+              </select>
+            </label>
           </div>
 
           <div className={styles.tableWrapper}>
@@ -411,32 +469,25 @@ export default function RealEstateBoard() {
                 </tr>
               </thead>
               <tbody>
-                {isPending && !isLoading && (
-                  <tr>
-                    <td colSpan={8} className={styles.placeholder}>
-                      검색 중...
-                    </td>
-                  </tr>
-                )}
-                {!isPending &&
-                  filteredDeals.slice(0, 8).map((deal, index) => (
+                {showSkeleton && <SkeletonRows />}
+                {!showSkeleton &&
+                  sortedDeals.slice(0, 8).map((deal, index) => (
                     <tr key={`${deal.id}-${index}`}>
                       <td data-label="계약일">
                         {format(new Date(deal.contractDate), "yyyy.MM.dd")}
                       </td>
                       <td data-label="단지/동">{deal.apartmentName}</td>
-                    <td data-label="세대수">{formatHouseholds(deal)}</td>
-                    <td data-label="준공">{formatBuildYear(deal)}</td>
-                    <td data-label="역 거리">{formatStationDistance(deal)}</td>
+                      <td data-label="세대수">{formatHouseholds(deal)}</td>
+                      <td data-label="준공">{formatBuildYear(deal)}</td>
+                      <td data-label="역 거리">{formatStationDistance(deal)}</td>
                       <td data-label="면적">{formatAreaValue(deal.area)}</td>
                       <td data-label="층">{formatFloorValue(deal)}</td>
-                      <td data-label="거래가">{formatKoreanPrice(deal.price)}</td>
+                      <td data-label="거래가" aria-label={`거래가 ${formatKoreanPrice(deal.price)}`}>
+                        {formatKoreanPrice(deal.price)}
+                      </td>
                     </tr>
                   ))}
-                {!isPending &&
-                  filteredDeals.length === 0 &&
-                  !isLoading &&
-                  renderNoDealsMessage()}
+                {!showSkeleton && sortedDeals.length === 0 && !isLoading && renderNoDealsMessage()}
               </tbody>
             </table>
           </div>
@@ -451,7 +502,7 @@ export default function RealEstateBoard() {
           </div>
           <ul className={styles.memoList}>
             <li>
-              최근 계약: {deals[0]?.apartmentName ?? "집계 중"}{" "}
+              최근 계약: {sortedDeals[0]?.apartmentName ?? "집계 중"}{" "}
               {summary?.latestPrice
                 ? `(${formatKoreanPrice(summary.latestPrice)})`
                 : ""}
@@ -542,3 +593,26 @@ const matchesAreaBySize = (area: number, filter: AreaFilter) => {
   }
   return true;
 };
+
+function SkeletonRows() {
+  return (
+    <tr>
+      <td colSpan={8}>
+        <div className={styles.skeletonWrapper}>
+          {Array.from({ length: 5 }).map((_, idx) => (
+            <div key={`skeleton-${idx}`} className={styles.skeletonRow} />
+          ))}
+        </div>
+      </td>
+    </tr>
+  );
+}
+
+
+
+
+
+
+
+
+

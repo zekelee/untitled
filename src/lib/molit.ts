@@ -164,9 +164,6 @@ const matchesUnjeong = (deal: DealRecord) => {
   return ALLOWED_NEIGHBORHOOD_KEYWORDS.some((keyword) => text.includes(keyword));
 };
 
-const buildAptKey = (deal: DealRecord) =>
-  `${deal.apartmentName}-${deal.bonbun ?? ""}-${deal.bubun ?? ""}`;
-
 export const fetchDealsFromMolit = async ({
   regionCode,
   yearMonth,
@@ -233,21 +230,11 @@ export const fetchDealsFromMolit = async ({
     throw new Error("운정신도시 전용 84㎡ 이하 거래가 없습니다.");
   }
 
-  const maxFloorByApt = new Map<string, number>();
   filteredDeals.forEach((deal) => {
-    if (!deal.floorNumber) return;
-    const key = buildAptKey(deal);
-    const prev = maxFloorByApt.get(key) ?? 0;
-    if (deal.floorNumber > prev) {
-      maxFloorByApt.set(key, deal.floorNumber);
-    }
-  });
-
-  filteredDeals.forEach((deal) => {
-    if (!deal.totalFloors) {
-      const candidate = maxFloorByApt.get(buildAptKey(deal));
-      if (candidate) {
-        deal.totalFloors = candidate;
+    if (!deal.totalFloors && deal.apartmentName) {
+      const metadata = getComplexMetadata(deal.apartmentName);
+      if (metadata?.totalFloors) {
+        deal.totalFloors = metadata.totalFloors;
       }
     }
   });
