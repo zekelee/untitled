@@ -37,6 +37,10 @@ import {
 import {
   IconActivity,
   IconBell,
+  IconChevronLeft,
+  IconChevronRight,
+  IconChevronsLeft,
+  IconChevronsRight,
   IconHomeSearch,
   IconScale,
   IconTrendingUp,
@@ -49,6 +53,8 @@ import styles from "./deal-dashboard.module.css";
 
 const PYEONG_RATIO = 3.3058;
 const CTA_TARGET_ID = "deals-table";
+const PAGE_SIZE = 10;
+const MAX_PAGE_BUTTONS = 10;
 
 type AreaFilter = "all" | "59" | "84";
 type YearFilter = "all" | "new" | "mid" | "old";
@@ -84,6 +90,7 @@ export default function RealEstateBoard() {
   const [areaFilter, setAreaFilter] = useState<AreaFilter>("all");
   const [yearFilter, setYearFilter] = useState<YearFilter>("all");
   const [sortOrder, setSortOrder] = useState<SortOrder>("none");
+  const [currentPage, setCurrentPage] = useState(1);
   const [isPending, startTransition] = useTransition();
 
   const alertPrice = 950_000_000;
@@ -148,6 +155,14 @@ export default function RealEstateBoard() {
         return base;
     }
   }, [filteredDeals, sortOrder]);
+
+  const totalPages = Math.max(1, Math.ceil(sortedDeals.length / PAGE_SIZE));
+  const safePage = Math.min(Math.max(1, currentPage), totalPages);
+
+  const paginatedDeals = useMemo(() => {
+    const start = (safePage - 1) * PAGE_SIZE;
+    return sortedDeals.slice(start, start + PAGE_SIZE);
+  }, [sortedDeals, safePage]);
 
   const summary = data?.summary;
   const priceDelta = priceDiffRatio(
@@ -239,6 +254,7 @@ export default function RealEstateBoard() {
       setAreaFilter("all");
       setYearFilter("all");
       setSortOrder("none");
+      setCurrentPage(1);
     });
   };
 
@@ -262,6 +278,23 @@ export default function RealEstateBoard() {
   );
 
   const showSkeleton = (isPending || isLoading) && !error;
+
+  const goToPage = (page: number) => {
+    const clamped = Math.min(Math.max(1, page), totalPages);
+    startTransition(() => setCurrentPage(clamped));
+  };
+
+  const pageNumbers = useMemo(() => {
+    const count = Math.min(MAX_PAGE_BUTTONS, totalPages);
+    const half = Math.floor(count / 2);
+    let start = Math.max(1, safePage - half);
+    let end = start + count - 1;
+    if (end > totalPages) {
+      end = totalPages;
+      start = Math.max(1, end - count + 1);
+    }
+    return Array.from({ length: end - start + 1 }, (_, idx) => start + idx);
+  }, [safePage, totalPages]);
 
   return (
     <div className={styles.wrapper}>
@@ -363,7 +396,11 @@ export default function RealEstateBoard() {
               <IconBell aria-hidden="true" size={20} />
             </div>
             <select
-              className={styles.alertSelect}
+              className={classNames(
+                styles.selectInput,
+                styles.selectFullWidth,
+                styles.alertSelect,
+              )}
               value={alertChannel}
               onChange={(event) => setAlertChannel(event.target.value)}
               aria-label="알림 채널 선택"
@@ -405,12 +442,14 @@ export default function RealEstateBoard() {
             <label htmlFor="area-filter">
               평형 선택
               <select
+                className={styles.selectInput}
                 id="area-filter"
                 value={areaFilter}
                 onChange={(event) =>
-                  startTransition(() =>
-                    setAreaFilter(event.target.value as AreaFilter),
-                  )
+                  startTransition(() => {
+                    setAreaFilter(event.target.value as AreaFilter);
+                    setCurrentPage(1);
+                  })
                 }
               >
                 <option value="all">전체</option>
@@ -421,12 +460,14 @@ export default function RealEstateBoard() {
             <label htmlFor="year-filter">
               준공연도
               <select
+                className={styles.selectInput}
                 id="year-filter"
                 value={yearFilter}
                 onChange={(event) =>
-                  startTransition(() =>
-                    setYearFilter(event.target.value as YearFilter),
-                  )
+                  startTransition(() => {
+                    setYearFilter(event.target.value as YearFilter);
+                    setCurrentPage(1);
+                  })
                 }
               >
                 <option value="all">전체</option>
@@ -438,12 +479,14 @@ export default function RealEstateBoard() {
             <label htmlFor="sort-order">
               정렬
               <select
+                className={styles.selectInput}
                 id="sort-order"
                 value={sortOrder}
                 onChange={(event) =>
-                  startTransition(() =>
-                    setSortOrder(event.target.value as SortOrder),
-                  )
+                  startTransition(() => {
+                    setSortOrder(event.target.value as SortOrder);
+                    setCurrentPage(1);
+                  })
                 }
               >
                 <option value="none">정렬 없음</option>
@@ -471,7 +514,7 @@ export default function RealEstateBoard() {
               <tbody>
                 {showSkeleton && <SkeletonRows />}
                 {!showSkeleton &&
-                  sortedDeals.slice(0, 8).map((deal, index) => (
+                  paginatedDeals.map((deal, index) => (
                     <tr key={`${deal.id}-${index}`}>
                       <td data-label="계약일">
                         {format(new Date(deal.contractDate), "yyyy.MM.dd")}
@@ -491,6 +534,59 @@ export default function RealEstateBoard() {
               </tbody>
             </table>
           </div>
+          {!showSkeleton && sortedDeals.length > PAGE_SIZE && (
+            <div className={styles.pagination}>
+              <button
+                type="button"
+                className={styles.paginationIconButton}
+                onClick={() => goToPage(1)}
+                disabled={safePage === 1}
+                aria-label="첫 페이지"
+              >
+                <IconChevronsLeft aria-hidden="true" size={16} />
+              </button>
+              <button
+                type="button"
+                className={styles.paginationIconButton}
+                onClick={() => goToPage(safePage - 1)}
+                disabled={safePage === 1}
+                aria-label="이전 페이지"
+              >
+                <IconChevronLeft aria-hidden="true" size={16} />
+              </button>
+              {pageNumbers.map((page) => (
+                <button
+                  type="button"
+                  key={page}
+                  className={classNames(styles.pageButton, {
+                    [styles.activePageButton]: page === safePage,
+                  })}
+                  onClick={() => goToPage(page)}
+                  aria-label={`${page}페이지로 이동`}
+                >
+                  {page}
+                </button>
+              ))}
+              <button
+                type="button"
+                className={styles.paginationIconButton}
+                onClick={() => goToPage(safePage + 1)}
+                disabled={safePage === totalPages}
+                aria-label="다음 페이지"
+              >
+                <IconChevronRight aria-hidden="true" size={16} />
+              </button>
+              <button
+                type="button"
+                className={styles.paginationIconButton}
+                onClick={() => goToPage(totalPages)}
+                disabled={safePage === totalPages}
+                aria-label="마지막 페이지"
+              >
+                <IconChevronsRight aria-hidden="true" size={16} />
+              </button>
+            </div>
+          )}
         </section>
 
         <section className={classNames(styles.card, styles.memoCard)}>
