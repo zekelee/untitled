@@ -1,7 +1,6 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
-const FX_URL =
-  "https://api.exchangerate.host/latest?base=USD&symbols=KRW";
+const FX_URL = "https://open.er-api.com/v6/latest/USD";
 
 type MarketPayload = {
   updatedAt: string;
@@ -18,6 +17,19 @@ type IndicatorItem = {
   source: string;
 };
 
+const BASE_RATES = {
+  korea: {
+    label: "한국 기준금리",
+    value: 3.5,
+    source: "한국은행 (2025-05)",
+  },
+  us: {
+    label: "미국 기준금리",
+    value: 5.25,
+    source: "미 연준 (2025-05)",
+  },
+};
+
 let cache: MarketPayload | null = null;
 let cachedAt = 0;
 const TTL = 1000 * 60 * 60; // 1시간
@@ -28,26 +40,26 @@ export async function GET() {
   }
 
   try {
-    const fxResponse = await fetch(FX_URL, { next: { revalidate: 3600 } });
+    const fxResponse = await fetch(FX_URL, { next: { revalidate: 0 } });
     if (!fxResponse.ok) {
       throw new Error("환율 API 호출 실패");
     }
     const fxJson = await fxResponse.json();
-    const usdKrw = Number(fxJson?.rates?.KRW ?? 0);
-    const updatedAt = fxJson?.date
-      ? new Date(fxJson.date).toISOString()
+    const usdKrw = Number(fxJson?.rates?.KRW ?? fxJson?.rates?.krw ?? 0);
+    const updatedAt = fxJson?.time_last_update_utc
+      ? new Date(fxJson.time_last_update_utc).toISOString()
       : new Date().toISOString();
 
     const payload: MarketPayload = {
       updatedAt,
       baseRates: {
-        korea: { label: "한국 기준금리", value: 3.5, source: "한국은행 (2025-02)" },
-        us: { label: "미국 기준금리", value: 5.25, source: "미 연준 (2025-03)" },
+        korea: BASE_RATES.korea,
+        us: BASE_RATES.us,
       },
       usdKrw: {
         label: "USD / KRW",
         value: usdKrw,
-        source: "exchangerate.host",
+        source: "open.er-api.com",
       },
     };
 
@@ -62,8 +74,11 @@ export async function GET() {
       });
     }
 
-    return NextResponse.json({
-      error: error instanceof Error ? error.message : "지표 데이터를 불러올 수 없습니다.",
-    }, { status: 502 });
+    return NextResponse.json(
+      {
+        error: error instanceof Error ? error.message : "지표 데이터를 불러올 수 없습니다.",
+      },
+      { status: 502 },
+    );
   }
 }
