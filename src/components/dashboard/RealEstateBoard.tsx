@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useMemo, useState, type ReactNode } from "react";
 import useSWR from "swr";
@@ -142,14 +142,14 @@ export default function RealEstateBoard() {
       scales: {
         x: {
           ticks: { color: "rgba(255,255,255,0.7)" },
-          grid: { color: "rgba(255,255,255,0.02)" },
+          grid: { color: "rgba(255,255,255,0.05)" },
         },
         y: {
           ticks: {
             color: "rgba(255,255,255,0.7)",
             callback: formatAxisLabel,
           },
-          grid: { color: "rgba(255,255,255,0.08)", drawBorder: false },
+          grid: { color: "rgba(255,255,255,0.1)", drawBorder: false },
         },
       },
     }),
@@ -185,7 +185,10 @@ export default function RealEstateBoard() {
             <h1>최근 실거래 흐름 & 즉시 대응 인사이트</h1>
             <p className={styles.subtitle}>
               국토부 실거래 데이터를 실시간으로 불러와 평균가·면적·층 정보를 정리했습니다.
-              API 오류가 날 경우 자동 재시도하며, 하단 목록은 최신 계약일 순으로 정렬됩니다.
+              API 오류 시 자동 재시도하며, 하단 목록은 최신 계약일 순으로 정렬됩니다.
+            </p>
+            <p className={styles.filterNote}>
+              ※ 운정신도시 + 전용 84㎡ 이하(보금자리론 기준) 아파트만 집계합니다.
             </p>
           </div>
         </header>
@@ -288,7 +291,7 @@ export default function RealEstateBoard() {
                 <>
                   <span>직전 실거래 {formatKoreanPrice(summary.latestPrice)}</span>
                   <span>
-                    목표선 {formatKoreanPrice(alertPrice)} 대비{" "}
+                    목표선 {formatKoreanPrice(alertPrice)} 대비 {" "}
                     {percentLabel(priceDiffRatio(alertPrice, summary.latestPrice))}
                   </span>
                 </>
@@ -307,10 +310,11 @@ export default function RealEstateBoard() {
           <div className={styles.cardHeader}>
             <div>
               <p className={styles.cardKicker}>최신 계약</p>
-              <h2>운정신도시 아파트 실거래</h2>
+              <h2>운정신도시 실거래</h2>
             </div>
             <span className={styles.helperText}>최근 계약 {deals.length}건</span>
           </div>
+
           <div className={styles.tableWrapper}>
             <table>
               <thead>

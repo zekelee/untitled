@@ -36,6 +36,11 @@
   margin-top: 0.35rem;
   line-height: 1.5;
 }
+.filterNote {
+  margin-top: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
 
 .areaToggle {
   width: 48px;

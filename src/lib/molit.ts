@@ -1,4 +1,4 @@
-import { randomUUID } from "crypto";
+﻿import { randomUUID } from "crypto";
 import { DEFAULT_PROPERTY_TYPE } from "./constants";
 import { summarizeDeals } from "./calculations";
 import type {
@@ -19,42 +19,37 @@ const ENDPOINT_MAP: Record<PropertyType, string> = {
   house: "/HouseTransactionService/v1/getRTMSDataSvcSHTrade",
 };
 
-const KOREAN_KEYS = {
-  area: [
-    "\uC804\uC6A9\uBA74\uC801",
-    "\uC804\uC6A9\uBA74\uC801(\u33A1)",
-    "exclusiveArea",
-    "excluUseAr",
-  ],
-  price: ["\uAC70\uB798\uAE08\uC561", "dealAmount"],
-  lawdCode: [
-    "\uBC95\uC815\uB3D9\uC2DC\uAD70\uAD6C\uCF54\uB4DC",
-    "\uBC95\uC815\uB3D9\uBCF8\uBC88\uCF54\uB4DC",
-    "lawdCd",
-  ],
-  year: ["\uB144", "dealYear"],
-  month: ["\uC6D4", "dealMonth"],
-  day: ["\uC77C", "dealDay"],
-  apartment: [
-    "\uC544\uD30C\uD2B8",
-    "\uC544\uD30C\uD2B8\uBA85",
-    "aptName",
-    "buildingName",
-    "aptNm",
-  ],
-  region: [
-    "\uBC95\uC815\uB3D9",
-    "\uC2DC\uAD70\uAD6C",
-    "\uC74C\uBA74",
-    "region",
-    "sidoNm",
-    "sggNm",
-    "umdNm",
-  ],
-  floor: ["\uCE35", "floor"],
-  totalFloors: ["\uCD1D\uCE35", "totalFloor", "flrCnt"],
-  serial: ["\uC77C\uB828\uBC88\uD638", "serialNumber", "aptSeq"],
+const TEXT_KEYS = {
+  area: ["전용면적", "전용면적(㎡)", "exclusiveArea", "excluUseAr"],
+  price: ["거래금액", "dealAmount"],
+  lawdCode: ["법정동시군구코드", "법정동본번코드", "lawdCd"],
+  year: ["년", "dealYear"],
+  month: ["월", "dealMonth"],
+  day: ["일", "dealDay"],
+  apartment: ["아파트", "아파트명", "aptName", "buildingName", "aptNm"],
+  region: ["법정동", "시군구", "읍면", "region", "sidoNm", "sggNm", "umdNm"],
+  floor: ["층", "floor"],
+  totalFloors: ["총층", "totalFloor", "flrCnt"],
+  serial: ["일련번호", "serialNumber", "aptSeq"],
+  road: ["도로명", "roadNm"],
 };
+
+const ALLOWED_NEIGHBORHOOD_KEYWORDS = [
+  "운정",
+  "동패",
+  "교하",
+  "야당",
+  "문발",
+  "목동",
+  "산남",
+  "동산",
+  "당하",
+  "와동",
+  "다율",
+  "서패",
+];
+
+const AREA_LIMIT_SQM = Number(process.env.APT_MAX_AREA_SQM ?? "84") || 84;
 
 const parseNumber = (value?: string | number | null) => {
   if (typeof value === "number") return value;
@@ -64,7 +59,7 @@ const parseNumber = (value?: string | number | null) => {
   return Number.isFinite(parsed) ? parsed : 0;
 };
 
-const pick = (raw: RawRecord, keys: string[]) => {
+const pickValue = (raw: RawRecord, keys: string[]) => {
   for (const key of keys) {
     if (key in raw) {
       const value = raw[key];
@@ -84,45 +79,49 @@ const normalizeDeal = (
   raw: RawRecord,
   propertyType: PropertyType,
 ): DealRecord => {
-  const area = parseNumber(pick(raw, KOREAN_KEYS.area));
-  const price =
-    parseNumber(pick(raw, KOREAN_KEYS.price)) * 10_000;
-  const lawdCode = String(pick(raw, KOREAN_KEYS.lawdCode) ?? "");
+  const area = parseNumber(pickValue(raw, TEXT_KEYS.area));
+  const price = parseNumber(pickValue(raw, TEXT_KEYS.price)) * 10_000;
+  const lawdCode = String(pickValue(raw, TEXT_KEYS.lawdCode) ?? "");
 
   const contractYear =
-    parseNumber(pick(raw, KOREAN_KEYS.year)) || new Date().getFullYear();
+    parseNumber(pickValue(raw, TEXT_KEYS.year)) || new Date().getFullYear();
   const contractMonth =
-    parseNumber(pick(raw, KOREAN_KEYS.month)) ||
+    parseNumber(pickValue(raw, TEXT_KEYS.month)) ||
     new Date().getMonth() + 1;
   const contractDay =
-    parseNumber(pick(raw, KOREAN_KEYS.day)) || new Date().getDate();
+    parseNumber(pickValue(raw, TEXT_KEYS.day)) || new Date().getDate();
 
-  const apartmentRaw = pick(raw, KOREAN_KEYS.apartment);
   const apartmentName =
-    (apartmentRaw !== undefined ? String(apartmentRaw).trim() : "") ||
+    (pickValue(raw, TEXT_KEYS.apartment) as string | undefined)?.trim() ??
     "미확인 단지";
-  const regionRaw = pick(raw, KOREAN_KEYS.region);
   const regionName =
-    (regionRaw !== undefined ? String(regionRaw).trim() : "") ||
-    (lawdCode || "정보 없음");
-
-  const floorRaw = pick(raw, KOREAN_KEYS.floor);
-  const totalFloorsRaw = pick(raw, KOREAN_KEYS.totalFloors);
+    (pickValue(raw, TEXT_KEYS.region) as string | undefined)?.trim() ??
+    lawdCode;
+  const roadName =
+    (pickValue(raw, TEXT_KEYS.road) as string | undefined)?.trim();
+  const floorRaw = pickValue(raw, TEXT_KEYS.floor);
+  const floorNumber = floorRaw ? parseNumber(floorRaw) : undefined;
+  const totalFloorsRaw = pickValue(raw, TEXT_KEYS.totalFloors);
 
   return {
-    id: `${lawdCode}-${pick(raw, KOREAN_KEYS.serial) ?? randomUUID()}`,
+    id: `${lawdCode}-${pickValue(raw, TEXT_KEYS.serial) ?? randomUUID()}`,
     propertyType,
     apartmentName,
     area,
     floor: floorRaw !== undefined ? String(floorRaw) : undefined,
-    totalFloors: totalFloorsRaw
-      ? parseNumber(totalFloorsRaw) || undefined
-      : undefined,
+    floorNumber: floorNumber || undefined,
+    totalFloors: totalFloorsRaw ? parseNumber(totalFloorsRaw) || undefined : undefined,
     contractDate: `${contractYear}-${String(contractMonth).padStart(2, "0")}-${String(contractDay).padStart(2, "0")}`,
     price,
     pricePerSquareMeter: area > 0 ? price / area : price,
     regionName,
+    neighborhood: regionName,
+    roadName,
     lawdCode,
+    sggCode: raw["sggCd"] ? String(raw["sggCd"]) : undefined,
+    umdCode: raw["umdCd"] ? String(raw["umdCd"]) : undefined,
+    bonbun: raw["bonbun"] ? String(raw["bonbun"]) : undefined,
+    bubun: raw["bubun"] ? String(raw["bubun"]) : undefined,
     year: contractYear,
     month: contractMonth,
   };
@@ -140,6 +139,14 @@ const parseJson = async (res: Response) => {
     );
   }
 };
+
+const matchesUnjeong = (deal: DealRecord) => {
+  const text = `${deal.regionName ?? ""} ${deal.neighborhood ?? ""} ${deal.apartmentName ?? ""} ${deal.roadName ?? ""}`;
+  return ALLOWED_NEIGHBORHOOD_KEYWORDS.some((keyword) => text.includes(keyword));
+};
+
+const buildAptKey = (deal: DealRecord) =>
+  `${deal.apartmentName}-${deal.bonbun ?? ""}-${deal.bubun ?? ""}`;
 
 export const fetchDealsFromMolit = async ({
   regionCode,
@@ -171,7 +178,7 @@ export const fetchDealsFromMolit = async ({
   url.searchParams.set("serviceKey", serviceKey);
   url.searchParams.set("LAWD_CD", regionCode);
   url.searchParams.set("DEAL_YMD", yearMonth);
-  url.searchParams.set("numOfRows", "50");
+  url.searchParams.set("numOfRows", "100");
   url.searchParams.set("pageNo", "1");
   url.searchParams.set("_type", "json");
 
@@ -192,10 +199,43 @@ export const fetchDealsFromMolit = async ({
     payload?.ApartmentTransactionService?.body?.items ??
     [];
 
-  if (!Array.isArray(candidates) || candidates.length === 0) {
+  if (!Array.isArray(candidates) || !candidates.length) {
     throw new Error("국토부 API에서 거래 데이터가 비어 있습니다.");
   }
 
   const deals = candidates.map((item) => normalizeDeal(item, propertyType));
-  return { deals, summary: summarizeDeals(deals), source: "api" };
+
+  const filteredDeals = deals.filter((deal) => {
+    const areaOk = !deal.area || deal.area <= AREA_LIMIT_SQM + 0.5;
+    return areaOk && matchesUnjeong(deal);
+  });
+
+  if (!filteredDeals.length) {
+    throw new Error("운정신도시 전용 84㎡ 이하 거래가 없습니다.");
+  }
+
+  const maxFloorByApt = new Map<string, number>();
+  filteredDeals.forEach((deal) => {
+    if (!deal.floorNumber) return;
+    const key = buildAptKey(deal);
+    const prev = maxFloorByApt.get(key) ?? 0;
+    if (deal.floorNumber > prev) {
+      maxFloorByApt.set(key, deal.floorNumber);
+    }
+  });
+
+  filteredDeals.forEach((deal) => {
+    if (!deal.totalFloors) {
+      const candidate = maxFloorByApt.get(buildAptKey(deal));
+      if (candidate) {
+        deal.totalFloors = candidate;
+      }
+    }
+  });
+
+  return {
+    deals: filteredDeals,
+    summary: summarizeDeals(filteredDeals),
+    source: "api",
+  };
 };

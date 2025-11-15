@@ -6,12 +6,19 @@ export interface DealRecord {
   apartmentName: string;
   area: number;
   floor?: string;
+  floorNumber?: number;
   totalFloors?: number;
   contractDate: string;
   price: number;
   pricePerSquareMeter: number;
   regionName: string;
+  neighborhood?: string;
+  roadName?: string;
   lawdCode: string;
+  sggCode?: string;
+  umdCode?: string;
+  bonbun?: string;
+  bubun?: string;
   year: number;
   month: number;
 }
