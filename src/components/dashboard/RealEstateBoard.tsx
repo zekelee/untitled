@@ -168,7 +168,6 @@ export default function RealEstateBoard() {
   return (
     <div className={styles.wrapper}>
       <div className={styles.inner}>
-        <div className={styles.controlsBar}></div>
 
         <header className={styles.header}>
           <div>

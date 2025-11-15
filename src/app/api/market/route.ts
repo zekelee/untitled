@@ -28,15 +28,15 @@ const parseRate = (envKey: string, fallback: number) => {
 const BASE_RATES = {
   korea: {
     label: "한국 기준금리",
-    value: parseRate("KOREA_BASE_RATE", 3.5),
+    value: parseRate("KOREA_BASE_RATE", 2.5),
     source: process.env.KOREA_BASE_RATE_SOURCE ?? "한국은행",
-    updatedAt: process.env.KOREA_BASE_RATE_UPDATED_AT ?? "2025-05",
+    updatedAt: process.env.KOREA_BASE_RATE_UPDATED_AT ?? "2025-10-23",
   },
   us: {
     label: "미국 기준금리",
-    value: parseRate("US_BASE_RATE", 5.25),
+    value: parseRate("US_BASE_RATE", 4.0),
     source: process.env.US_BASE_RATE_SOURCE ?? "미 연준",
-    updatedAt: process.env.US_BASE_RATE_UPDATED_AT ?? "2025-05",
+    updatedAt: process.env.US_BASE_RATE_UPDATED_AT ?? "2025-10-30",
   },
 };
 

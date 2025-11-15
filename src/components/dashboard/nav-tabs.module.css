@@ -6,6 +6,11 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: rgba(0, 0, 0, 0.2);
   box-shadow: var(--shadow);
+  flex-wrap: nowrap;
+}
+
+.nav::-webkit-scrollbar {
+  display: none;
 }
 
 .tab {
@@ -14,6 +19,7 @@
   font-weight: 600;
   color: var(--muted);
   transition: background 0.2s ease;
+  white-space: nowrap;
 }
 
 .tab:hover {
@@ -23,4 +29,18 @@
 .active {
   background: linear-gradient(135deg, var(--accent), var(--accent-strong));
   color: #050607;
+}
+
+@media (max-width: 480px) {
+  .nav {
+    max-width: 100%;
+    overflow-x: auto;
+    justify-content: flex-start;
+    padding: 0.4rem;
+  }
+
+  .tab {
+    font-size: 0.85rem;
+    padding: 0.4rem 0.85rem;
+  }
 }
