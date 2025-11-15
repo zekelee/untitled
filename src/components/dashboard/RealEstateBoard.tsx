@@ -327,8 +327,8 @@ export default function RealEstateBoard() {
                 </tr>
               </thead>
               <tbody>
-                {deals.slice(0, 8).map((deal) => (
-                  <tr key={deal.id}>
+                {deals.slice(0, 8).map((deal, index) => (
+                  <tr key={`${deal.id}-${index}`}>
                     <td data-label="계약일">
                       {format(new Date(deal.contractDate), "yyyy.MM.dd")}
                     </td>

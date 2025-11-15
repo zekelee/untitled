@@ -99,20 +99,20 @@ export default function NewsBoard() {
               ) : (
                 <ul className={styles.newsList}>
                   {data.articles.map((item) => (
-                    <li key={`${item.title}-${item.publishedAt}`} className={styles.newsItem}>
-                      <div className={styles.newsMeta}>
-                        <span>{item.source}</span>
-                        <span>{format(new Date(item.publishedAt), "MM.dd HH:mm")}</span>
-                      </div>
-                      <a
-                        href={item.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className={styles.newsTitle}
-                      >
-                        {item.title}
-                      </a>
-                    </li>
+                  <li key={`${item.title}-${item.publishedAt}`} className={styles.newsItem}>
+                    <div className={styles.newsMeta}>
+                      <span>{item.source}</span>
+                      <span>{format(new Date(item.publishedAt), "MM.dd HH:mm")}</span>
+                    </div>
+                    <a
+                      href={item.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className={styles.newsTitle}
+                    >
+                        {stripSourceSuffix(item.title, item.source)}
+                    </a>
+                  </li>
                   ))}
                 </ul>
               )}
@@ -144,3 +144,20 @@ export default function NewsBoard() {
     </div>
   );
 }
+
+const stripSourceSuffix = (title: string, source?: string) => {
+  if (!source) return title;
+  const trimmedSource = source.replace(/[\s-]+$/, "").trim();
+  const normalizedTitle = title.trim();
+  if (!trimmedSource) return normalizedTitle;
+  const suffixPatterns = [
+    new RegExp(`\\s*-\\s*${trimmedSource}$`),
+    new RegExp(`\\s*\\|\\s*${trimmedSource}$`),
+  ];
+  for (const pattern of suffixPatterns) {
+    if (pattern.test(normalizedTitle)) {
+      return normalizedTitle.replace(pattern, "").trim();
+    }
+  }
+  return normalizedTitle;
+};
