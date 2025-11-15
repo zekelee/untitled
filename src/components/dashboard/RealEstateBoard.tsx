@@ -54,7 +54,7 @@ import styles from "./deal-dashboard.module.css";
 const PYEONG_RATIO = 3.3058;
 const CTA_TARGET_ID = "deals-table";
 const PAGE_SIZE = 10;
-const MAX_PAGE_BUTTONS = 10;
+const MAX_PAGE_BUTTONS = 5;
 
 type AreaFilter = "all" | "59" | "84";
 type YearFilter = "all" | "new" | "mid" | "old";

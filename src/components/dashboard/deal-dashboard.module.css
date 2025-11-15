@@ -422,6 +422,7 @@
   justify-content: space-between;
   font-size: 0.8rem;
   color: var(--muted);
+  margin-bottom: 0.35rem;
 }
 
 .newsTitle {
@@ -532,19 +533,24 @@
   margin-top: 1rem;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
+  gap: 0.35rem;
   justify-content: center;
   align-items: center;
 }
 
 .pagination button {
+  width: 40px;
+  height: 40px;
   border-radius: 999px;
   border: 1px solid var(--border);
   background: rgba(0, 0, 0, 0.2);
   color: var(--foreground);
-  padding: 0.4rem 0.9rem;
+  padding: 0;
   font-size: 0.85rem;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .pagination button:disabled {
@@ -554,15 +560,11 @@
 
 .pageButton {
   border-radius: 999px;
+  font-weight: 600;
 }
 
 .paginationIconButton {
-  width: 40px;
-  height: 40px;
-  padding: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  font-size: 0;
 }
 
 .activePageButton {
@@ -610,6 +612,16 @@
 
   .tableCard td[colspan]::before {
     display: none;
+  }
+
+  .pagination {
+    gap: 0.2rem;
+  }
+
+  .pagination button {
+    width: 32px;
+    height: 32px;
+    font-size: 0.75rem;
   }
 
   .filterControls {
