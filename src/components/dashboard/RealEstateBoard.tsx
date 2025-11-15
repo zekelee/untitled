@@ -62,6 +62,8 @@ const fetcher = async (url: string): Promise<DealsApiResponse> => {
   return payload;
 };
 
+const CTA_TARGET_ID = "deals-table";
+
 export default function RealEstateBoard() {
   const region = DEFAULT_REGION;
   const propertyType: PropertyType = DEFAULT_PROPERTY_TYPE;
@@ -176,27 +178,36 @@ export default function RealEstateBoard() {
     ? `${formatAreaValue(summary.areaRange[0])} ~ ${formatAreaValue(summary.areaRange[1])}`
     : "면적 정보 없음";
 
+  const renderNoDealsMessage = () => (
+    <tr>
+      <td colSpan={8} className={styles.placeholder}>
+        조건에 맞는 매물이 없습니다. 조건을 넓히시거나 알림 설정을 이용해 주세요.
+      </td>
+    </tr>
+  );
+
   return (
     <div className={styles.wrapper}>
       <div className={styles.inner}>
         <header className={styles.header}>
           <div>
-            <p className={styles.kicker}>운정신도시 아파트 집중 모니터링</p>
-            <h1>최근 실거래 흐름 & 즉시 대응 인사이트</h1>
+            <p className={styles.kicker}>운정 59/84 실거주 집중 탐색</p>
+            <h1>운정 내집마련 비교 서비스</h1>
             <p className={styles.subtitle}>
-              국토부 실거래 데이터를 실시간으로 불러와 평균가·면적·층 정보를 정리했습니다.
-              API 오류 시 자동 재시도하며, 하단 목록은 최신 계약일 순으로 정렬됩니다.
+              59㎡·84㎡ 신축·준신축 중심 실거주 매물을 실거래 기준으로 비교합니다.
             </p>
             <p className={styles.filterNote}>
-              ※ 운정신도시 + 전용 84㎡ 이하(보금자리론 기준) 아파트만 집계합니다.
+              ※ 보금자리론 요건(운정신도시 + 전용 84㎡ 이하)을 만족하는 단지 정보만 표시합니다.
             </p>
+            <a className={styles.primaryCta} href={`#${CTA_TARGET_ID}`}>
+              내 조건에 맞는 단지 찾기
+            </a>
           </div>
         </header>
 
         {error && (
           <div className={styles.alert}>
-            국토부 API 오류: {error.message}
-            {isValidating ? " · 재시도 중..." : ""}
+            API 점검 중입니다. 잠시 후 다시 시도해주세요.
           </div>
         )}
 
@@ -257,9 +268,7 @@ export default function RealEstateBoard() {
                   월별 데이터가 2건 이상일 때 차트를 표시합니다.
                 </div>
               ) : error ? (
-                <div className={styles.placeholder}>
-                  실거래 차트를 표시할 수 없습니다.
-                </div>
+                <div className={styles.placeholder}>API 점검 중입니다.</div>
               ) : (
                 <div className={styles.placeholder}>
                   표시 가능한 월별 데이터가 부족합니다.
@@ -302,7 +311,10 @@ export default function RealEstateBoard() {
           </div>
         </section>
 
-        <section className={classNames(styles.card, styles.tableCard)}>
+        <section
+          className={classNames(styles.card, styles.tableCard)}
+          id={CTA_TARGET_ID}
+        >
           <LoadingOverlay
             visible={isLoading && !!data}
             label="실거래 목록을 정리하는 중..."
@@ -321,6 +333,9 @@ export default function RealEstateBoard() {
                 <tr>
                   <th>계약일</th>
                   <th>단지/동</th>
+                  <th>세대수</th>
+                  <th>준공</th>
+                  <th>역 거리</th>
                   <th>면적 ({areaUnit === "sqm" ? "㎡" : "평"})</th>
                   <th>층 (현재/전체)</th>
                   <th>거래가</th>
@@ -333,18 +348,15 @@ export default function RealEstateBoard() {
                       {format(new Date(deal.contractDate), "yyyy.MM.dd")}
                     </td>
                     <td data-label="단지/동">{deal.apartmentName}</td>
+                    <td data-label="세대수">{formatHouseholds(deal)}</td>
+                    <td data-label="준공">{formatBuildYear(deal)}</td>
+                    <td data-label="역 거리">{formatStationDistance(deal)}</td>
                     <td data-label="면적">{formatAreaValue(deal.area)}</td>
                     <td data-label="층">{formatFloorValue(deal)}</td>
                     <td data-label="거래가">{formatKoreanPrice(deal.price)}</td>
                   </tr>
                 ))}
-                {deals.length === 0 && !isLoading && (
-                  <tr>
-                    <td colSpan={5} className={styles.placeholder}>
-                      운정신도시 실거래 데이터가 아직 없습니다.
-                    </td>
-                  </tr>
-                )}
+                {deals.length === 0 && !isLoading && renderNoDealsMessage()}
               </tbody>
             </table>
           </div>
@@ -430,3 +442,12 @@ const formatFloorValue = (deal: DealRecord) => {
   const total = deal.totalFloors ? `${deal.totalFloors}층` : "?층";
   return `${current} / ${total}`;
 };
+
+const formatHouseholds = (deal: DealRecord) =>
+  deal.households ? `${deal.households.toLocaleString()}세대` : "정보 준비중";
+
+const formatBuildYear = (deal: DealRecord) =>
+  deal.buildYear ? `${deal.buildYear}년` : "정보 준비중";
+
+const formatStationDistance = (deal: DealRecord) =>
+  deal.stationDistance ?? "정보 준비중";

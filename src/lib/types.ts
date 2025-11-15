@@ -8,6 +8,9 @@ export interface DealRecord {
   floor?: string;
   floorNumber?: number;
   totalFloors?: number;
+  buildYear?: number;
+  households?: number;
+  stationDistance?: string;
   contractDate: string;
   price: number;
   pricePerSquareMeter: number;

@@ -1,6 +1,7 @@
 ﻿import { randomUUID } from "crypto";
 import { DEFAULT_PROPERTY_TYPE } from "./constants";
 import { summarizeDeals } from "./calculations";
+import { getComplexMetadata } from "@/data/complexMetadata";
 import type {
   DealRecord,
   DealsApiResponse,
@@ -102,6 +103,8 @@ const normalizeDeal = (
   const floorRaw = pickValue(raw, TEXT_KEYS.floor);
   const floorNumber = floorRaw ? parseNumber(floorRaw) : undefined;
   const totalFloorsRaw = pickValue(raw, TEXT_KEYS.totalFloors);
+  const buildYear = raw["buildYear"] ? parseNumber(raw["buildYear"]) : null;
+  const metadata = getComplexMetadata(apartmentName);
 
   return {
     id: `${lawdCode}-${pickValue(raw, TEXT_KEYS.serial) ?? randomUUID()}`,
@@ -118,6 +121,9 @@ const normalizeDeal = (
     neighborhood: regionName,
     roadName,
     lawdCode,
+    buildYear: buildYear || undefined,
+    households: metadata?.households,
+    stationDistance: metadata?.stationDistance,
     sggCode: raw["sggCd"] ? String(raw["sggCd"]) : undefined,
     umdCode: raw["umdCd"] ? String(raw["umdCd"]) : undefined,
     bonbun: raw["bonbun"] ? String(raw["bonbun"]) : undefined,
