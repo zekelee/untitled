@@ -43,3 +43,29 @@ yarn start
 1. ë„¤ì´ë²„ë¶€ë™ì‚°/ì§ë°© ë“±ì—ì„œ ìš´ì • í•„í„°ë¥¼ ì ìš©í•´ ì‹ ê·œ ë§¤ë¬¼ì„ í¬ë¡¤ë§í•˜ê³ , êµ­í† ë¶€ ì‹¤ê±°ë˜ ì‹ ê³  ì§€ì—° ë°ì´í„°ë¥¼ ë³´ì™„í•©ë‹ˆë‹¤.
 2. Edge Functionì´ë‚˜ ì£¼ê¸°ì  í¬ë¡  ì‘ì—…ìœ¼ë¡œ ì¹´ì¹´ì˜¤í†¡/ì´ë©”ì¼/Slack ì•Œë¦¼ì„ ìë™ ë°œì†¡í•©ë‹ˆë‹¤.
 3. ìš´ì • ì™¸ ìˆ˜ë„ê¶Œ ì£¼ìš” ì§€ì—­ì„ íƒ­ìœ¼ë¡œ í™•ì¥í•˜ê³ , ê°€ì¡± ì„¤ë“ìš© í”„ë ˆì  í…Œì´ì…˜ì´ë‚˜ PDF ë¦¬í¬íŠ¸ë¥¼ ìë™ ìƒì„±í•©ë‹ˆë‹¤.
+---
+
+## Environment extras
+
+```bash
+# optional ECOS key (defaults to sample)
+BOK_API_KEY=sample
+
+# optional manual overrides when public APIs are down
+KOREA_BASE_RATE=3.50
+KOREA_BASE_RATE_SOURCE=ÇÑ±¹ÀºÇà º¸µµÀÚ·á
+KOREA_BASE_RATE_UPDATED_AT=2025-11-01
+KOREA_BASE_RATE_CHANGE=-0.25
+US_BASE_RATE=4.00
+```
+
+- Without `BOK_API_KEY` the ECOS `sample` key is used (daily quota 1,000). Obtain your own key for production deployments.
+- Manual rate variables (`KOREA_BASE_RATE`, `US_BASE_RATE`, ¡¦) act as fallbacks only. When the real APIs respond successfully these overrides are ignored.
+
+## Live data sources
+
+| Endpoint | Provider | Notes |
+| --- | --- | --- |
+| `/api/deals` | MOLIT `getRTMSDataSvcAptTradeDev` | ¿îÁ¤(41480) ½Ç°Å·¡, ´ÜÁö/¸éÀû/Ãş ÆÄ½Ì |
+| `/api/market` | ÇÑ±¹ÀºÇà ECOS ¡¤ FRED ¡¤ open.er-api.com | ÇÑ±¹¡¤¹Ì±¹ ±âÁØ±İ¸®, USD/KRW |
+| `/api/news` | Google News RSS | ¿îÁ¤/±İ¸® Å°¿öµå, ÃÖ±Ù 7ÀÏ ±â»ç¸¸ ³ëÃâ |

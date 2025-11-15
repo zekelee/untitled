@@ -1,5 +1,5 @@
 .nav {
-  display: inline-flex;
+  display: flex;
   gap: 0.5rem;
   padding: 0.5rem;
   border-radius: 999px;
@@ -7,6 +7,9 @@
   background: rgba(0, 0, 0, 0.2);
   box-shadow: var(--shadow);
   flex-wrap: nowrap;
+  flex: 1;
+  justify-content: flex-end;
+  min-width: 0;
 }
 
 .nav::-webkit-scrollbar {
@@ -33,14 +36,13 @@
 
 @media (max-width: 480px) {
   .nav {
-    max-width: 100%;
     overflow-x: auto;
-    justify-content: flex-start;
-    padding: 0.4rem;
+    justify-content: flex-end;
+    padding: 0.35rem;
   }
 
   .tab {
-    font-size: 0.85rem;
-    padding: 0.4rem 0.85rem;
+    font-size: 0.82rem;
+    padding: 0.35rem 0.75rem;
   }
 }

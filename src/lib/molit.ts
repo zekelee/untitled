@@ -7,6 +7,8 @@ import type {
   PropertyType,
 } from "./types";
 
+type RawRecord = Record<string, string | number | null | undefined>;
+
 const API_BASE =
   process.env.MOLIT_API_BASE?.replace(/\/$/, "") ??
   "https://apis.data.go.kr/1613000";
@@ -17,37 +19,109 @@ const ENDPOINT_MAP: Record<PropertyType, string> = {
   house: "/HouseTransactionService/v1/getRTMSDataSvcSHTrade",
 };
 
-const parseNumber = (value?: string | number) => {
+const KOREAN_KEYS = {
+  area: [
+    "\uC804\uC6A9\uBA74\uC801",
+    "\uC804\uC6A9\uBA74\uC801(\u33A1)",
+    "exclusiveArea",
+    "excluUseAr",
+  ],
+  price: ["\uAC70\uB798\uAE08\uC561", "dealAmount"],
+  lawdCode: [
+    "\uBC95\uC815\uB3D9\uC2DC\uAD70\uAD6C\uCF54\uB4DC",
+    "\uBC95\uC815\uB3D9\uBCF8\uBC88\uCF54\uB4DC",
+    "lawdCd",
+  ],
+  year: ["\uB144", "dealYear"],
+  month: ["\uC6D4", "dealMonth"],
+  day: ["\uC77C", "dealDay"],
+  apartment: [
+    "\uC544\uD30C\uD2B8",
+    "\uC544\uD30C\uD2B8\uBA85",
+    "aptName",
+    "buildingName",
+    "aptNm",
+  ],
+  region: [
+    "\uBC95\uC815\uB3D9",
+    "\uC2DC\uAD70\uAD6C",
+    "\uC74C\uBA74",
+    "region",
+    "sidoNm",
+    "sggNm",
+    "umdNm",
+  ],
+  floor: ["\uCE35", "floor"],
+  totalFloors: ["\uCD1D\uCE35", "totalFloor", "flrCnt"],
+  serial: ["\uC77C\uB828\uBC88\uD638", "serialNumber", "aptSeq"],
+};
+
+const parseNumber = (value?: string | number | null) => {
   if (typeof value === "number") return value;
   if (!value) return 0;
-  return Number(String(value).replace(/[^\d.]/g, "")) || 0;
+  const normalized = String(value).replace(/[^\d.-]/g, "");
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+
+const pick = (raw: RawRecord, keys: string[]) => {
+  for (const key of keys) {
+    if (key in raw) {
+      const value = raw[key];
+      if (value === undefined || value === null) continue;
+      if (typeof value === "string") {
+        const trimmed = value.trim();
+        if (!trimmed) continue;
+        return trimmed;
+      }
+      return value;
+    }
+  }
+  return undefined;
 };
 
 const normalizeDeal = (
-  raw: Record<string, string>,
+  raw: RawRecord,
   propertyType: PropertyType,
 ): DealRecord => {
-  const area = parseNumber(raw["전용면적"] ?? raw["exclusiveArea"]);
-  const price = parseNumber(raw["거래금액"] ?? raw["dealAmount"]) * 10_000;
-  const lawdCode = raw["법정동시군구코드"] ?? raw["lawdCd"] ?? "";
+  const area = parseNumber(pick(raw, KOREAN_KEYS.area));
+  const price =
+    parseNumber(pick(raw, KOREAN_KEYS.price)) * 10_000;
+  const lawdCode = String(pick(raw, KOREAN_KEYS.lawdCode) ?? "");
+
   const contractYear =
-    parseNumber(raw["년"] ?? raw["dealYear"]) || new Date().getFullYear();
+    parseNumber(pick(raw, KOREAN_KEYS.year)) || new Date().getFullYear();
   const contractMonth =
-    parseNumber(raw["월"] ?? raw["dealMonth"]) || new Date().getMonth() + 1;
+    parseNumber(pick(raw, KOREAN_KEYS.month)) ||
+    new Date().getMonth() + 1;
   const contractDay =
-    parseNumber(raw["일"] ?? raw["dealDay"]) || new Date().getDate();
+    parseNumber(pick(raw, KOREAN_KEYS.day)) || new Date().getDate();
+
+  const apartmentRaw = pick(raw, KOREAN_KEYS.apartment);
+  const apartmentName =
+    (apartmentRaw !== undefined ? String(apartmentRaw).trim() : "") ||
+    "미확인 단지";
+  const regionRaw = pick(raw, KOREAN_KEYS.region);
+  const regionName =
+    (regionRaw !== undefined ? String(regionRaw).trim() : "") ||
+    (lawdCode || "정보 없음");
+
+  const floorRaw = pick(raw, KOREAN_KEYS.floor);
+  const totalFloorsRaw = pick(raw, KOREAN_KEYS.totalFloors);
 
   return {
-    id: `${lawdCode}-${raw["일련번호"] ?? raw["serialNumber"] ?? randomUUID()}`,
+    id: `${lawdCode}-${pick(raw, KOREAN_KEYS.serial) ?? randomUUID()}`,
     propertyType,
-    apartmentName: raw["아파트"] ?? raw["aptName"] ?? raw["단지명"] ?? "미확인",
+    apartmentName,
     area,
-    floor: raw["층"] ?? raw["floor"],
-    totalFloors: parseNumber(raw["총층"] ?? raw["totalFloor"]),
+    floor: floorRaw !== undefined ? String(floorRaw) : undefined,
+    totalFloors: totalFloorsRaw
+      ? parseNumber(totalFloorsRaw) || undefined
+      : undefined,
     contractDate: `${contractYear}-${String(contractMonth).padStart(2, "0")}-${String(contractDay).padStart(2, "0")}`,
     price,
-    pricePerSquareMeter: area ? price / area : price,
-    regionName: raw["법정동"] ?? raw["region"] ?? lawdCode,
+    pricePerSquareMeter: area > 0 ? price / area : price,
+    regionName,
     lawdCode,
     year: contractYear,
     month: contractMonth,
@@ -61,8 +135,8 @@ const parseJson = async (res: Response) => {
   } catch {
     throw new Error(
       text.includes("<html")
-        ? "국토부 시스템 점검 또는 HTML 응답 수신"
-        : "국토부 응답 파싱 실패",
+        ? "국토부 시스템에서 HTML 응답을 반환했습니다."
+        : "국토부 응답 파싱에 실패했습니다.",
     );
   }
 };
@@ -112,14 +186,14 @@ export const fetchDealsFromMolit = async ({
   }
 
   const payload = await parseJson(res);
-  const candidates: Record<string, string>[] =
+  const candidates: RawRecord[] =
     payload?.data ??
     payload?.response?.body?.items?.item ??
     payload?.ApartmentTransactionService?.body?.items ??
     [];
 
   if (!Array.isArray(candidates) || candidates.length === 0) {
-    throw new Error("국토부 API에 거래 데이터가 없습니다.");
+    throw new Error("국토부 API에서 거래 데이터가 비어 있습니다.");
   }
 
   const deals = candidates.map((item) => normalizeDeal(item, propertyType));

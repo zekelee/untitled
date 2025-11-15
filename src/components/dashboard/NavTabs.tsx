@@ -6,9 +6,9 @@ import classNames from "classnames";
 import styles from "./nav-tabs.module.css";
 
 const tabs = [
-  { href: "/real-estate", label: "운정 실거래" },
-  { href: "/news", label: "시장 뉴스" },
-  { href: "/finance", label: "대출 전략" },
+  { href: "/real-estate", label: "시세" },
+  { href: "/news", label: "뉴스" },
+  { href: "/finance", label: "대출" },
 ];
 
 export default function NavTabs() {

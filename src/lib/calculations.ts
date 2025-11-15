@@ -30,12 +30,19 @@ const buildSeries = (deals: DealRecord[]): PricePoint[] => {
     .sort((a, b) => (a.label > b.label ? 1 : -1));
 };
 
+const sortByContractDateDesc = (rows: DealRecord[]) =>
+  [...rows].sort(
+    (a, b) =>
+      new Date(b.contractDate).getTime() - new Date(a.contractDate).getTime(),
+  );
+
 export const summarizeDeals = (deals: DealRecord[]): DealsSummary => {
-  const prices = deals.map((deal) => deal.price);
-  const latestPrice = deals[0]?.price;
-  const previousPrice = deals[1]?.price;
-  const minArea = Math.min(...deals.map((deal) => deal.area));
-  const maxArea = Math.max(...deals.map((deal) => deal.area));
+  const sortedDeals = sortByContractDateDesc(deals);
+  const prices = sortedDeals.map((deal) => deal.price);
+  const latestPrice = sortedDeals[0]?.price;
+  const previousPrice = sortedDeals[1]?.price;
+  const minArea = Math.min(...sortedDeals.map((deal) => deal.area));
+  const maxArea = Math.max(...sortedDeals.map((deal) => deal.area));
 
   return {
     averagePrice:
@@ -43,9 +50,9 @@ export const summarizeDeals = (deals: DealRecord[]): DealsSummary => {
     medianPrice: median(prices),
     latestPrice,
     previousPrice,
-    totalDeals: deals.length,
+    totalDeals: sortedDeals.length,
     areaRange: [Number.isFinite(minArea) ? minArea : 0, Number.isFinite(maxArea) ? maxArea : 0],
     updatedAt: new Date().toISOString(),
-    monthlySeries: buildSeries(deals),
+    monthlySeries: buildSeries(sortedDeals),
   };
 };

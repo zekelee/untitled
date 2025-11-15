@@ -6,31 +6,31 @@ const LOAN_POINTS = [
   {
     label: "대출 한도",
     value: "최대 4.7억",
-    helper: "생애최초 + 2인 이상 가구 기준",
+    helper: "생애최초 + 자녀 2명 기준",
   },
   {
     label: "금리 구간",
     value: "연 3.45%~",
-    helper: "신혼/다자녀 우대 시",
+    helper: "혼합형 고정 · 변동 혼용",
   },
   {
     label: "LTV / DTI",
     value: "70% / 60%",
-    helper: "비규제지역, 시가 9억 이하",
+    helper: "비규제 지역, 시가 9억 이하",
   },
   {
     label: "거치 / 상환",
-    value: "거치 3년 / 30년",
-    helper: "중도상환수수료 3년간 1.2% → 0%",
+    value: "거치 3년 / 만기 30년",
+    helper: "중도상환수수료 3년차 0%까지",
   },
-];
+] as const;
 
 const DOCS = [
-  "혼인·가족관계증명서, 주민등록등본, 등본상 세대원 전원 준비",
-  "재직증명서 + 근로소득원천징수영수증(또는 소득금액증명)",
-  "매매계약서 원본 및 잔금계약 관련 서류",
+  "주민등록등본, 가족관계증명서, 혼인관계증명서",
+  "재직증명서 + 근로소득원천징수영수증 (또는 소득금액증명)",
+  "매매계약서 사본 및 계약금 영수증",
   "기존 대출 상환내역, 신용정보 조회 동의서",
-];
+] as const;
 
 export default function FinanceBoard() {
   return (
@@ -39,10 +39,10 @@ export default function FinanceBoard() {
         <header className={styles.header}>
           <div>
             <p className={styles.kicker}>생애최초 보금자리론</p>
-            <h1>자금 조달 & 서류 체크리스트</h1>
+            <h1>자금 조달 & 준비 서류 빠른 체크</h1>
             <p className={styles.subtitle}>
-              운정 아파트 구매를 위한 대출 전략과 필수 서류를 정리했습니다.
-              추후 은행 상담 시 바로 활용할 수 있습니다.
+              운정 아파트 매입 시 적용 가능한 금리/한도와 필수 구비서류를 정리했습니다.
+              상담 전 기본 정보를 정비하면 심사 지연을 줄일 수 있습니다.
             </p>
           </div>
         </header>
@@ -50,8 +50,8 @@ export default function FinanceBoard() {
         <section className={classNames(styles.card, styles.loanCard)}>
           <div className={styles.cardHeader}>
             <div>
-              <p className={styles.cardKicker}>대출 한눈에 보기</p>
-              <h2>조건 요약</h2>
+              <p className={styles.cardKicker}>조건 요약</p>
+              <h2>대출 핵심 비교</h2>
             </div>
             <IconBriefcase size={20} />
           </div>

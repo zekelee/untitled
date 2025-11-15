@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useMemo, useState, type ReactNode } from "react";
 import useSWR from "swr";
@@ -23,12 +23,11 @@ import {
 } from "@/lib/constants";
 import type { DealRecord, DealsApiResponse, PropertyType } from "@/lib/types";
 import {
-  formatCurrencyKRW,
+  formatKoreanPrice,
   formatNumber,
   percentLabel,
   priceDiffRatio,
 } from "@/lib/utils";
-import { Select } from "@mantine/core";
 import {
   IconActivity,
   IconBell,
@@ -36,7 +35,8 @@ import {
   IconScale,
   IconTrendingUp,
 } from "@tabler/icons-react";
-import AreaToggle, { AreaUnit } from "./AreaToggle";
+import AreaToggle from "./AreaToggle";
+import type { AreaUnit } from "./AreaToggle";
 import RefreshButton from "./RefreshButton";
 import LoadingOverlay from "./LoadingOverlay";
 import styles from "./deal-dashboard.module.css";
@@ -57,7 +57,7 @@ const fetcher = async (url: string): Promise<DealsApiResponse> => {
   const res = await fetch(url);
   const payload = await res.json();
   if (!res.ok) {
-    throw new Error(payload?.error ?? "데이터를 불러오지 못했습니다.");
+    throw new Error(payload?.error ?? "실거래 데이터를 불러오지 못했습니다.");
   }
   return payload;
 };
@@ -87,8 +87,7 @@ export default function RealEstateBoard() {
     if (!data?.deals) return [];
     return [...data.deals].sort(
       (a, b) =>
-        new Date(b.contractDate).getTime() -
-        new Date(a.contractDate).getTime(),
+        new Date(b.contractDate).getTime() - new Date(a.contractDate).getTime(),
     );
   }, [data]);
 
@@ -99,53 +98,65 @@ export default function RealEstateBoard() {
   );
 
   const priceLineData = useMemo(() => {
-    const labels = summary?.monthlySeries.map((row) => row.label) ?? [];
-    const values = summary?.monthlySeries.map((row) => row.value) ?? [];
+    const labels = summary?.monthlySeries?.map((row) => row.label) ?? [];
+    const values = summary?.monthlySeries?.map((row) => row.value) ?? [];
     return {
       labels,
       datasets: [
         {
-          label: "평균 실거래가",
+          label: "월평균 실거래가",
           data: values,
-          borderColor: "rgba(90, 200, 250, 1)",
-          backgroundColor: "rgba(90, 200, 250, 0.15)",
+          borderColor: "rgba(102, 251, 225, 1)",
+          backgroundColor: "rgba(102, 251, 225, 0.2)",
+          pointBackgroundColor: "#ff5da2",
+          pointBorderColor: "#0d141f",
           fill: true,
           tension: 0.35,
-          pointRadius: 3,
+          pointRadius: values.length === 1 ? 6 : 4,
+          borderWidth: 3,
         },
       ],
     };
   }, [summary?.monthlySeries]);
 
+  const formatAxisLabel = (value: number | string) => {
+    const numeric = typeof value === "string" ? Number(value) : value;
+    if (!Number.isFinite(numeric)) return value;
+    return `${(numeric / 100_000_000).toFixed(1)}억`;
+  };
+
   const chartOptions = useMemo(
     () => ({
       responsive: true,
+      maintainAspectRatio: false,
       plugins: {
         legend: { display: false },
         tooltip: {
+          displayColors: false,
           callbacks: {
             label: (ctx: TooltipItem<"line">) =>
-              ` ${formatCurrencyKRW(Number(ctx.raw ?? ctx.parsed?.y ?? 0))}`,
+              ` ${formatKoreanPrice(Number(ctx.raw ?? ctx.parsed?.y ?? 0))}`,
           },
         },
       },
       scales: {
         x: {
-          ticks: { color: "var(--muted)" },
-          grid: { display: false },
+          ticks: { color: "rgba(255,255,255,0.7)" },
+          grid: { color: "rgba(255,255,255,0.02)" },
         },
         y: {
           ticks: {
-            color: "var(--muted)",
-            callback: (value: number | string) =>
-              `${Number(value) / 100_000_000}억`,
+            color: "rgba(255,255,255,0.7)",
+            callback: formatAxisLabel,
           },
-          grid: { color: "rgba(255,255,255,0.05)" },
+          grid: { color: "rgba(255,255,255,0.08)", drawBorder: false },
         },
       },
     }),
     [],
   );
+
+  const hasChartSeries = (summary?.monthlySeries?.length ?? 0) >= 2;
 
   const handleRefresh = useCallback(() => {
     mutate();
@@ -163,19 +174,18 @@ export default function RealEstateBoard() {
 
   const areaRangeLabel = summary
     ? `${formatAreaValue(summary.areaRange[0])} ~ ${formatAreaValue(summary.areaRange[1])}`
-    : "면적 범위";
+    : "면적 정보 없음";
 
   return (
     <div className={styles.wrapper}>
       <div className={styles.inner}>
-
         <header className={styles.header}>
           <div>
-            <p className={styles.kicker}>운정 실거래 인텔리전스</p>
-            <h1>아파트 가격 흐름 & 구매 전략</h1>
+            <p className={styles.kicker}>운정신도시 아파트 집중 모니터링</p>
+            <h1>최근 실거래 흐름 & 즉시 대응 인사이트</h1>
             <p className={styles.subtitle}>
-              국토부 실거래가 API를 기반으로 파주 운정신도시 아파트 가격을
-              추적하고 알림 조건을 정리합니다.
+              국토부 실거래 데이터를 실시간으로 불러와 평균가·면적·층 정보를 정리했습니다.
+              API 오류가 날 경우 자동 재시도하며, 하단 목록은 최신 계약일 순으로 정렬됩니다.
             </p>
           </div>
         </header>
@@ -183,40 +193,38 @@ export default function RealEstateBoard() {
         {error && (
           <div className={styles.alert}>
             국토부 API 오류: {error.message}
-            {isValidating ? " · 재시도 중" : ""}
+            {isValidating ? " · 재시도 중..." : ""}
           </div>
         )}
 
         <section className={styles.statsGrid}>
           <StatCard
             label="평균 실거래가"
-            value={
-              summary ? formatCurrencyKRW(summary.averagePrice) : "–"
-            }
-            helper="최근 신고 기준"
+            value={summary ? formatKoreanPrice(summary.averagePrice) : "정보 없음"}
+            helper="최근 집계 기준"
             icon={<IconActivity size={20} />}
           />
           <StatCard
-            label="중위 가격"
-            value={summary ? formatCurrencyKRW(summary.medianPrice) : "–"}
-            helper="이상/이하 균형 시세"
+            label="중위 실거래가"
+            value={summary ? formatKoreanPrice(summary.medianPrice) : "정보 없음"}
+            helper="이상치 제거 기준"
             icon={<IconScale size={20} />}
           />
           <StatCard
-            label="전월 대비"
+            label="등락률"
             value={percentLabel(priceDelta)}
             helper={
               summary?.latestPrice && summary?.previousPrice
-                ? `${formatCurrencyKRW(summary.latestPrice)} → ${formatCurrencyKRW(summary.previousPrice)}`
-                : "직전 신고 대비"
+                ? `${formatKoreanPrice(summary.latestPrice)} → ${formatKoreanPrice(summary.previousPrice)}`
+                : "직전 거래 대비"
             }
             positive={priceDelta >= 0}
             icon={<IconTrendingUp size={20} />}
           />
           <StatCard
-            label="계약 건수"
+            label="최근 거래 건수"
             value={summary ? formatNumber(summary.totalDeals) : "0"}
-            helper={summary ? areaRangeLabel : "면적 범위"}
+            helper={summary ? areaRangeLabel : "면적 표준화 중"}
             icon={<IconHomeSearch size={20} />}
           />
         </section>
@@ -225,29 +233,34 @@ export default function RealEstateBoard() {
           <div className={classNames(styles.card, styles.chartCard)}>
             <LoadingOverlay
               visible={isLoading && !!data}
-              label="국토부 데이터를 불러오는 중..."
+              label="실거래 추세를 불러오는 중..."
             />
             <div className={styles.cardHeader}>
               <div>
-                <p className={styles.cardKicker}>가격 추이</p>
-                <h2>운정 실거래 평균</h2>
+                <p className={styles.cardKicker}>가격 추세</p>
+                <h2>월평균 거래가 차트</h2>
               </div>
               <span className={styles.updatedAt}>
                 {summary
-                  ? `업데이트 ${format(
-                      new Date(summary.updatedAt),
-                      "MM월 dd일 HH:mm",
-                    )}`
-                  : "업데이트 준비중"}
+                  ? `업데이트 ${format(new Date(summary.updatedAt), "MM월 dd일 HH:mm")}`
+                  : "업데이트 준비 중"}
               </span>
             </div>
             <div className={styles.chartWrapper}>
-              {summary?.monthlySeries?.length ? (
+              {hasChartSeries ? (
                 <Line data={priceLineData} options={chartOptions} />
+              ) : summary?.monthlySeries?.length ? (
+                <div className={styles.placeholder}>
+                  월별 데이터가 2건 이상일 때 차트를 표시합니다.
+                </div>
               ) : error ? (
-                <div className={styles.placeholder}>국토부 응답을 기다리고 있습니다.</div>
+                <div className={styles.placeholder}>
+                  실거래 차트를 표시할 수 없습니다.
+                </div>
               ) : (
-                <div className={styles.placeholder}>최근 월별 데이터가 없습니다.</div>
+                <div className={styles.placeholder}>
+                  표시 가능한 월별 데이터가 부족합니다.
+                </div>
               )}
             </div>
           </div>
@@ -255,39 +268,32 @@ export default function RealEstateBoard() {
           <div className={classNames(styles.card, styles.alertCard)}>
             <div className={styles.cardHeader}>
               <div>
-                <p className={styles.cardKicker}>알림 조건</p>
-                <h2>카카오봇 & 이메일 리포트</h2>
+                <p className={styles.cardKicker}>알림 채널</p>
+                <h2>카카오/이메일 가격 감시</h2>
               </div>
               <IconBell size={20} />
             </div>
-            <Select
-              label="알림 채널"
-              data={[
-                { label: "카카오톡 봇", value: "kakao" },
-                { label: "이메일 리포트", value: "email" },
-                { label: "문자 메시지", value: "sms" },
-              ]}
+            <select
+              className={styles.alertSelect}
               value={alertChannel}
-              onChange={(value) =>
-                setAlertChannel(value ?? alertChannel)
-              }
-              radius="md"
-            />
+              onChange={(event) => setAlertChannel(event.target.value)}
+              aria-label="알림 채널 선택"
+            >
+              <option value="kakao">카카오 채널</option>
+              <option value="email">이메일 리포트</option>
+              <option value="sms">문자 메시지</option>
+            </select>
             <div className={styles.alertSummary}>
               {summary?.latestPrice ? (
                 <>
+                  <span>직전 실거래 {formatKoreanPrice(summary.latestPrice)}</span>
                   <span>
-                    최근 신고가 {formatCurrencyKRW(summary.latestPrice)}
-                  </span>
-                  <span>
-                    목표 {formatCurrencyKRW(alertPrice)} 대비 {" "}
-                    {percentLabel(
-                      priceDiffRatio(alertPrice, summary.latestPrice),
-                    )}
+                    목표선 {formatKoreanPrice(alertPrice)} 대비{" "}
+                    {percentLabel(priceDiffRatio(alertPrice, summary.latestPrice))}
                   </span>
                 </>
               ) : (
-                <span>실거래를 불러오면 비교 수치가 표기됩니다.</span>
+                <span>실거래가를 불러온 뒤 자동으로 벤치마크가 계산됩니다.</span>
               )}
             </div>
           </div>
@@ -296,43 +302,42 @@ export default function RealEstateBoard() {
         <section className={classNames(styles.card, styles.tableCard)}>
           <LoadingOverlay
             visible={isLoading && !!data}
-            label="실거래 목록을 불러오는 중..."
+            label="실거래 목록을 정리하는 중..."
           />
           <div className={styles.cardHeader}>
             <div>
-              <p className={styles.cardKicker}>최신 신고 내역</p>
-              <h2>상세 실거래 목록</h2>
+              <p className={styles.cardKicker}>최신 계약</p>
+              <h2>운정신도시 아파트 실거래</h2>
             </div>
-            <span className={styles.helperText}>
-              최근 신고 {deals.length}건
-            </span>
+            <span className={styles.helperText}>최근 계약 {deals.length}건</span>
           </div>
-
           <div className={styles.tableWrapper}>
             <table>
               <thead>
                 <tr>
                   <th>계약일</th>
-                  <th>단지/건물</th>
+                  <th>단지/동</th>
                   <th>면적 ({areaUnit === "sqm" ? "㎡" : "평"})</th>
-                  <th>층 (현/총)</th>
-                  <th>거래금액</th>
+                  <th>층 (현재/전체)</th>
+                  <th>거래가</th>
                 </tr>
               </thead>
               <tbody>
                 {deals.slice(0, 8).map((deal) => (
                   <tr key={deal.id}>
-                    <td>{format(new Date(deal.contractDate), "yyyy.MM.dd")}</td>
-                    <td>{deal.apartmentName}</td>
-                    <td>{formatAreaValue(deal.area)}</td>
-                    <td>{formatFloorValue(deal)}</td>
-                    <td>{formatCurrencyKRW(deal.price)}</td>
+                    <td data-label="계약일">
+                      {format(new Date(deal.contractDate), "yyyy.MM.dd")}
+                    </td>
+                    <td data-label="단지/동">{deal.apartmentName}</td>
+                    <td data-label="면적">{formatAreaValue(deal.area)}</td>
+                    <td data-label="층">{formatFloorValue(deal)}</td>
+                    <td data-label="거래가">{formatKoreanPrice(deal.price)}</td>
                   </tr>
                 ))}
                 {deals.length === 0 && !isLoading && (
                   <tr>
                     <td colSpan={5} className={styles.placeholder}>
-                      국토부 실거래를 불러오는 중입니다.
+                      운정신도시 실거래 데이터가 아직 없습니다.
                     </td>
                   </tr>
                 )}
@@ -344,28 +349,31 @@ export default function RealEstateBoard() {
         <section className={classNames(styles.card, styles.memoCard)}>
           <div className={styles.cardHeader}>
             <div>
-              <p className={styles.cardKicker}>체크 포인트</p>
+              <p className={styles.cardKicker}>체크리스트</p>
               <h2>투자 근거 요약</h2>
             </div>
           </div>
           <ul className={styles.memoList}>
             <li>
-              최근 신고 {deals[0]?.apartmentName ?? "단지"}
+              최근 계약: {deals[0]?.apartmentName ?? "집계 중"}{" "}
               {summary?.latestPrice
-                ? ` ${formatCurrencyKRW(summary.latestPrice)} 수준`
-                : " 가격 준비중"}
+                ? `(${formatKoreanPrice(summary.latestPrice)})`
+                : ""}
             </li>
             <li>
-              월별 평균 {summary ? formatCurrencyKRW(summary.averagePrice) : "–"}
-              / 전월 대비 {percentLabel(priceDelta)} 흐름
+              평균 vs 중위 가격 격차{" "}
+              {summary
+                ? `${formatKoreanPrice(summary.averagePrice)} / ${formatKoreanPrice(summary.medianPrice)}`
+                : "집계 중"}
             </li>
-            <li>면적 단위: {areaUnit === "sqm" ? "제곱미터" : "평"}</li>
-            <li>보금자리론 한도·금리를 맞춰 자금 계획 확정</li>
+            <li>모니터링 면적 기준: {areaUnit === "sqm" ? "제곱미터" : "평"}</li>
+            <li>신규 매물 알림: 카카오 봇 연동 완료 → 조건 만족 시 실시간 푸시</li>
           </ul>
         </section>
+
         <div className={styles.floatingControls}>
           <AreaToggle value={areaUnit} onChange={setAreaUnit} />
-          <RefreshButton loading={isLoading} onClick={handleRefresh} />
+          <RefreshButton loading={isValidating || isLoading} onClick={handleRefresh} />
         </div>
       </div>
     </div>
@@ -407,14 +415,14 @@ function StatCard({
 }
 
 const formatFloorValue = (deal: DealRecord) => {
-  const parseFloor = (value?: string) => {
-    if (!value) return "-";
-    const num = Number(value.toString().replace(/[^\d-]/g, ""));
-    if (Number.isNaN(num)) return value;
+  const sanitize = (value?: string | number) => {
+    if (value === undefined || value === null) return "-";
+    const num = Number(String(value).replace(/[^\d-]/g, ""));
+    if (Number.isNaN(num)) return String(value);
     return `${num}층`;
   };
 
-  const current = parseFloor(deal.floor);
-  const total = deal.totalFloors ? `${deal.totalFloors}층` : "?";
-  return `${current}/${total}`;
+  const current = sanitize(deal.floor);
+  const total = deal.totalFloors ? `${deal.totalFloors}층` : "?층";
+  return `${current} / ${total}`;
 };

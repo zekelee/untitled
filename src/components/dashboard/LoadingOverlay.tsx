@@ -10,7 +10,7 @@ interface LoadingOverlayProps {
 
 export default function LoadingOverlay({
   visible,
-  label = "데이터를 불러오는 중...",
+  label = "데이터를 불러오는 중입니다...",
 }: LoadingOverlayProps) {
   if (!visible) return null;
   return (

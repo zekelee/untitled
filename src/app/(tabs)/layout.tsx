@@ -1,4 +1,4 @@
-﻿import NavTabs from "@/components/dashboard/NavTabs";
+import NavTabs from "@/components/dashboard/NavTabs";
 import styles from "./tabs.module.css";
 
 export default function TabsLayout({

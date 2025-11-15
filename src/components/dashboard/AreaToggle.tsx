@@ -1,11 +1,16 @@
-﻿"use client";
+"use client";
+
+import classNames from "classnames";
+import styles from "./deal-dashboard.module.css";
+
+export type AreaUnit = "sqm" | "pyeong";
 
 interface Props {
-  value: "sqm" | "pyeong";
-  onChange: (value: "sqm" | "pyeong") => void;
+  value: AreaUnit;
+  onChange: (value: AreaUnit) => void;
 }
 
-const options: { label: string; value: "sqm" | "pyeong" }[] = [
+const OPTIONS: { label: string; value: AreaUnit }[] = [
   { label: "㎡", value: "sqm" },
   { label: "평", value: "pyeong" },
 ];
@@ -15,20 +20,25 @@ export default function AreaToggle({ value, onChange }: Props) {
   return (
     <button
       type="button"
-      aria-label="면적 단위 변경"
+      aria-label="면적 단위 전환"
+      className={styles.areaToggle}
       onClick={() => onChange(nextValue)}
     >
-      {options.map((option) => (
-        <span
-          key={option.value}
-          style={{
-            fontWeight: option.value === value ? 700 : 400,
-            color: option.value === value ? "#03101f" : "var(--muted)",
-          }}
-        >
-          {option.label}
-        </span>
-      ))}
+      <span className={styles.areaToggleLabel}>
+        {OPTIONS.map((option, index) => (
+          <span
+            key={option.value}
+            className={classNames({
+              [styles.areaToggleActive]: option.value === value,
+            })}
+          >
+            {option.label}
+            {index === 0 && (
+              <span className={styles.areaToggleDivider}>|</span>
+            )}
+          </span>
+        ))}
+      </span>
     </button>
   );
 }

@@ -16,7 +16,7 @@ export default function RefreshButton({ loading, onClick }: Props) {
       className={styles.refreshButton}
       onClick={onClick}
       disabled={loading}
-      aria-label="국토부 데이터 새로고침"
+      aria-label="데이터 새로고침"
     >
       {loading ? (
         <Loader size="xs" color="rgba(5, 8, 15, 0.8)" />
