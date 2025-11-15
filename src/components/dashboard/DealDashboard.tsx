@@ -138,7 +138,7 @@ export default function DealDashboard() {
   const propertyType: PropertyType = DEFAULT_PROPERTY_TYPE;
   const [areaUnit, setAreaUnit] = useState<AreaUnit>("sqm");
   const selectedMonth = currentYearMonth();
-  const alertPrice = 950_000_000;
+  const alertPrice = 450_000_000;
   const [alertChannel, setAlertChannel] = useState("kakao");
   const [memo, setMemo] = useState(
     "부모님 지원 2억과 생애최초 보금자리론을 조합해 운정 역세권 대형 평형을 노린다.",
@@ -314,7 +314,7 @@ export default function DealDashboard() {
             value={percentLabel(priceDelta)}
             helper={
               summary?.latestPrice && summary?.previousPrice
-                ? `${formatCurrencyKRW(summary.latestPrice)} → ${formatCurrencyKRW(summary.previousPrice)}`
+                ? `${formatCurrencyKRW(summary.previousPrice)} → ${formatCurrencyKRW(summary.latestPrice)}`
                 : "직전 신고 대비"
             }
             positive={priceDelta >= 0}

@@ -93,7 +93,7 @@ export default function RealEstateBoard() {
   const [currentPage, setCurrentPage] = useState(1);
   const [isPending, startTransition] = useTransition();
 
-  const alertPrice = 950_000_000;
+  const alertPrice = 450_000_000;
 
   const searchKey = `/api/deals?region=${region}&propertyType=${propertyType}&yearMonth=${selectedMonth}`;
 
@@ -339,7 +339,7 @@ export default function RealEstateBoard() {
             value={percentLabel(priceDelta)}
             helper={
               summary?.latestPrice && summary?.previousPrice
-                ? `${formatKoreanPrice(summary.latestPrice)} → ${formatKoreanPrice(summary.previousPrice)}`
+                ? `${formatKoreanPrice(summary.previousPrice)} → ${formatKoreanPrice(summary.latestPrice)}`
                 : "직전 거래 대비"
             }
             positive={priceDelta >= 0}
