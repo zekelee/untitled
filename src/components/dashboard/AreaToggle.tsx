@@ -18,9 +18,17 @@ export default function AreaToggle({ value, onChange }: Props) {
       aria-label="면적 단위 변경"
       onClick={() => onChange(nextValue)}
     >
-      {options
-        .map((option) => `${option.label}${option.value === value ? "" : ""}`)
-        .join(" ")}
+      {options.map((option) => (
+        <span
+          key={option.value}
+          style={{
+            fontWeight: option.value === value ? 700 : 400,
+            color: option.value === value ? "#03101f" : "var(--muted)",
+          }}
+        >
+          {option.label}
+        </span>
+      ))}
     </button>
   );
 }

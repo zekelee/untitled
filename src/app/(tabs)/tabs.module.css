@@ -1,5 +1,8 @@
 ﻿.tabsShell {
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .tabsHeader {
@@ -37,6 +40,8 @@
 
 .tabContent {
   margin-top: 1.5rem;
+  width: 100%;
+  max-width: 520px;
   padding: 0 1.5rem;
 }
 
@@ -66,5 +71,9 @@
   .brand {
     font-size: 0.8rem;
     gap: 0.45rem;
+  }
+
+  .tabContent {
+    padding: 0 0.75rem;
   }
 }
