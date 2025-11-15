@@ -11,6 +11,7 @@ export interface DealRecord {
   buildYear?: number;
   households?: number;
   stationDistance?: string;
+  areaTag?: "59" | "84";
   contractDate: string;
   price: number;
   pricePerSquareMeter: number;

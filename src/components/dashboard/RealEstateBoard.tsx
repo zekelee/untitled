@@ -1,6 +1,12 @@
 ﻿"use client";
 
-import { useCallback, useMemo, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useMemo,
+  useState,
+  useTransition,
+  type ReactNode,
+} from "react";
 import useSWR from "swr";
 import {
   CategoryScale,
@@ -64,6 +70,9 @@ const fetcher = async (url: string): Promise<DealsApiResponse> => {
 
 const CTA_TARGET_ID = "deals-table";
 
+type AreaFilter = "all" | "59" | "84";
+type YearFilter = "all" | "new" | "mid" | "old";
+
 export default function RealEstateBoard() {
   const region = DEFAULT_REGION;
   const propertyType: PropertyType = DEFAULT_PROPERTY_TYPE;
@@ -71,6 +80,10 @@ export default function RealEstateBoard() {
   const [alertChannel, setAlertChannel] = useState("kakao");
   const selectedMonth = currentYearMonth();
   const alertPrice = 950_000_000;
+  const currentYear = useMemo(() => new Date().getFullYear(), []);
+  const [areaFilter, setAreaFilter] = useState<AreaFilter>("all");
+  const [yearFilter, setYearFilter] = useState<YearFilter>("all");
+  const [isPending, startTransition] = useTransition();
 
   const searchKey = `/api/deals?region=${region}&propertyType=${propertyType}&yearMonth=${selectedMonth}`;
 
@@ -92,6 +105,28 @@ export default function RealEstateBoard() {
         new Date(b.contractDate).getTime() - new Date(a.contractDate).getTime(),
     );
   }, [data]);
+
+  const filteredDeals = useMemo(() => {
+    return deals.filter((deal) => {
+      const areaMatch =
+        areaFilter === "all"
+          ? true
+          : deal.areaTag
+            ? deal.areaTag === areaFilter
+            : matchesAreaBySize(deal.area, areaFilter);
+
+      const yearMatch = (() => {
+        if (yearFilter === "all") return true;
+        if (!deal.buildYear) return false;
+        const age = currentYear - deal.buildYear;
+        if (yearFilter === "new") return age <= 5;
+        if (yearFilter === "mid") return age > 5 && age <= 10;
+        return age > 10;
+      })();
+
+      return areaMatch && yearMatch;
+    });
+  }, [deals, areaFilter, yearFilter, currentYear]);
 
   const summary = data?.summary;
   const priceDelta = priceDiffRatio(
@@ -181,7 +216,7 @@ export default function RealEstateBoard() {
   const renderNoDealsMessage = () => (
     <tr>
       <td colSpan={8} className={styles.placeholder}>
-        조건에 맞는 매물이 없습니다. 조건을 넓히시거나 알림 설정을 이용해 주세요.
+        조건에 맞는 매물이 없습니다. 조건을 완화하거나 다른 평형·준공연도를 선택해 보세요.
       </td>
     </tr>
   );
@@ -210,6 +245,40 @@ export default function RealEstateBoard() {
             API 점검 중입니다. 잠시 후 다시 시도해주세요.
           </div>
         )}
+
+        <div className={styles.filterControls}>
+          <label>
+            평형 선택
+            <select
+              value={areaFilter}
+              onChange={(event) =>
+                startTransition(() =>
+                  setAreaFilter(event.target.value as AreaFilter),
+                )
+              }
+            >
+              <option value="all">전체</option>
+              <option value="59">59㎡</option>
+              <option value="84">84㎡</option>
+            </select>
+          </label>
+          <label>
+            준공연도
+            <select
+              value={yearFilter}
+              onChange={(event) =>
+                startTransition(() =>
+                  setYearFilter(event.target.value as YearFilter),
+                )
+              }
+            >
+              <option value="all">전체</option>
+              <option value="new">신축 (0~5년)</option>
+              <option value="mid">5~10년</option>
+              <option value="old">10년 이상</option>
+            </select>
+          </label>
+        </div>
 
         <section className={styles.statsGrid}>
           <StatCard
@@ -324,7 +393,7 @@ export default function RealEstateBoard() {
               <p className={styles.cardKicker}>최신 계약</p>
               <h2>운정신도시 실거래</h2>
             </div>
-            <span className={styles.helperText}>최근 계약 {deals.length}건</span>
+            <span className={styles.helperText}>조건 일치 {filteredDeals.length}건</span>
           </div>
 
           <div className={styles.tableWrapper}>
@@ -342,21 +411,32 @@ export default function RealEstateBoard() {
                 </tr>
               </thead>
               <tbody>
-                {deals.slice(0, 8).map((deal, index) => (
-                  <tr key={`${deal.id}-${index}`}>
-                    <td data-label="계약일">
-                      {format(new Date(deal.contractDate), "yyyy.MM.dd")}
+                {isPending && !isLoading && (
+                  <tr>
+                    <td colSpan={8} className={styles.placeholder}>
+                      검색 중...
                     </td>
-                    <td data-label="단지/동">{deal.apartmentName}</td>
+                  </tr>
+                )}
+                {!isPending &&
+                  filteredDeals.slice(0, 8).map((deal, index) => (
+                    <tr key={`${deal.id}-${index}`}>
+                      <td data-label="계약일">
+                        {format(new Date(deal.contractDate), "yyyy.MM.dd")}
+                      </td>
+                      <td data-label="단지/동">{deal.apartmentName}</td>
                     <td data-label="세대수">{formatHouseholds(deal)}</td>
                     <td data-label="준공">{formatBuildYear(deal)}</td>
                     <td data-label="역 거리">{formatStationDistance(deal)}</td>
-                    <td data-label="면적">{formatAreaValue(deal.area)}</td>
-                    <td data-label="층">{formatFloorValue(deal)}</td>
-                    <td data-label="거래가">{formatKoreanPrice(deal.price)}</td>
-                  </tr>
-                ))}
-                {deals.length === 0 && !isLoading && renderNoDealsMessage()}
+                      <td data-label="면적">{formatAreaValue(deal.area)}</td>
+                      <td data-label="층">{formatFloorValue(deal)}</td>
+                      <td data-label="거래가">{formatKoreanPrice(deal.price)}</td>
+                    </tr>
+                  ))}
+                {!isPending &&
+                  filteredDeals.length === 0 &&
+                  !isLoading &&
+                  renderNoDealsMessage()}
               </tbody>
             </table>
           </div>
@@ -451,3 +531,14 @@ const formatBuildYear = (deal: DealRecord) =>
 
 const formatStationDistance = (deal: DealRecord) =>
   deal.stationDistance ?? "정보 준비중";
+
+const matchesAreaBySize = (area: number, filter: AreaFilter) => {
+  if (!area) return false;
+  if (filter === "59") {
+    return area >= 55 && area <= 66;
+  }
+  if (filter === "84") {
+    return area >= 80 && area <= 90;
+  }
+  return true;
+};

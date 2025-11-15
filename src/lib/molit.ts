@@ -76,6 +76,17 @@ const pickValue = (raw: RawRecord, keys: string[]) => {
   return undefined;
 };
 
+const detectAreaTag = (
+  area: number,
+  metadataTags?: ("59" | "84")[],
+): "59" | "84" | undefined => {
+  if (metadataTags?.length === 1) return metadataTags[0];
+  if (!area) return undefined;
+  if (area >= 55 && area <= 66) return "59";
+  if (area >= 80 && area <= 90) return "84";
+  return metadataTags?.[0];
+};
+
 const normalizeDeal = (
   raw: RawRecord,
   propertyType: PropertyType,
@@ -105,6 +116,7 @@ const normalizeDeal = (
   const totalFloorsRaw = pickValue(raw, TEXT_KEYS.totalFloors);
   const buildYear = raw["buildYear"] ? parseNumber(raw["buildYear"]) : null;
   const metadata = getComplexMetadata(apartmentName);
+  const areaTag = detectAreaTag(area, metadata?.areaTags);
 
   return {
     id: `${lawdCode}-${pickValue(raw, TEXT_KEYS.serial) ?? randomUUID()}`,
@@ -124,6 +136,7 @@ const normalizeDeal = (
     buildYear: buildYear || undefined,
     households: metadata?.households,
     stationDistance: metadata?.stationDistance,
+    areaTag,
     sggCode: raw["sggCd"] ? String(raw["sggCd"]) : undefined,
     umdCode: raw["umdCd"] ? String(raw["umdCd"]) : undefined,
     bonbun: raw["bonbun"] ? String(raw["bonbun"]) : undefined,
