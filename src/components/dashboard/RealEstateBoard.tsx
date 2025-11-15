@@ -168,9 +168,7 @@ export default function RealEstateBoard() {
   return (
     <div className={styles.wrapper}>
       <div className={styles.inner}>
-        <div className={styles.controlsBar}>
-          <AreaToggle value={areaUnit} onChange={setAreaUnit} />
-        </div>
+        <div className={styles.controlsBar}></div>
 
         <header className={styles.header}>
           <div>
@@ -367,6 +365,7 @@ export default function RealEstateBoard() {
           </ul>
         </section>
         <div className={styles.floatingControls}>
+          <AreaToggle value={areaUnit} onChange={setAreaUnit} />
           <RefreshButton loading={isLoading} onClick={handleRefresh} />
         </div>
       </div>

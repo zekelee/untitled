@@ -15,18 +15,28 @@ type IndicatorItem = {
   label: string;
   value: number;
   source: string;
+  updatedAt?: string;
+};
+
+const parseRate = (envKey: string, fallback: number) => {
+  const raw = process.env[envKey];
+  if (!raw) return fallback;
+  const parsed = Number(raw);
+  return Number.isNaN(parsed) ? fallback : parsed;
 };
 
 const BASE_RATES = {
   korea: {
     label: "한국 기준금리",
-    value: 3.5,
-    source: "한국은행 (2025-05)",
+    value: parseRate("KOREA_BASE_RATE", 3.5),
+    source: process.env.KOREA_BASE_RATE_SOURCE ?? "한국은행",
+    updatedAt: process.env.KOREA_BASE_RATE_UPDATED_AT ?? "2025-05",
   },
   us: {
     label: "미국 기준금리",
-    value: 5.25,
-    source: "미 연준 (2025-05)",
+    value: parseRate("US_BASE_RATE", 5.25),
+    source: process.env.US_BASE_RATE_SOURCE ?? "미 연준",
+    updatedAt: process.env.US_BASE_RATE_UPDATED_AT ?? "2025-05",
   },
 };
 
@@ -60,6 +70,7 @@ export async function GET() {
         label: "USD / KRW",
         value: usdKrw,
         source: "open.er-api.com",
+        updatedAt,
       },
     };
 

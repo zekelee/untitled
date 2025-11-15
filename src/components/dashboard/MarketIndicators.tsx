@@ -20,6 +20,7 @@ interface IndicatorItem {
   label: string;
   value: number;
   source: string;
+  updatedAt?: string;
 }
 
 const fetcher = async (url: string): Promise<MarketData> => {
@@ -70,19 +71,19 @@ export default function MarketIndicators() {
               label={data.baseRates.korea.label}
               value={`${data.baseRates.korea.value.toFixed(2)}%`}
               icon={<IconFlag size={18} color="#00b894" />}
-              source={data.baseRates.korea.source}
+              source={`${data.baseRates.korea.source} (${data.baseRates.korea.updatedAt ?? ""})`}
             />
             <IndicatorCard
               label={data.baseRates.us.label}
               value={`${data.baseRates.us.value.toFixed(2)}%`}
               icon={<IconFlag size={18} color="#0984e3" />}
-              source={data.baseRates.us.source}
+              source={`${data.baseRates.us.source} (${data.baseRates.us.updatedAt ?? ""})`}
             />
             <IndicatorCard
               label={data.usdKrw.label}
               value={`${data.usdKrw.value.toFixed(2)}원`}
               icon={<IconWorldDollar size={18} />}
-              source={data.usdKrw.source}
+              source={`${data.usdKrw.source} (${new Date(data.usdKrw.updatedAt ?? data.updatedAt).toLocaleString("ko-KR")})`}
             />
           </div>
         )}
