@@ -553,9 +553,11 @@ function StatCard({
 }) {
   return (
     <div className={styles.statCard}>
-      <div className={styles.statIcon}>{icon}</div>
-      <div>
+      <div className={styles.statTop}>
+        <div className={styles.statIcon}>{icon}</div>
         <p className={styles.statLabel}>{label}</p>
+      </div>
+      <div className={styles.statBody}>
         <p className={styles.statValue}>{value}</p>
         {helper && (
           <p
