@@ -1,50 +1,26 @@
-"use client";
-
-import { SegmentedControl } from "@mantine/core";
-import { IconRulerMeasure } from "@tabler/icons-react";
-import styles from "./deal-dashboard.module.css";
-
-export type AreaUnit = "sqm" | "pyeong";
+﻿"use client";
 
 interface Props {
-  value: AreaUnit;
-  onChange: (value: AreaUnit) => void;
+  value: "sqm" | "pyeong";
+  onChange: (value: "sqm" | "pyeong") => void;
 }
 
-const segments = [
-  {
-    label: (
-      <span>
-        ㎡
-      </span>
-    ),
-    value: "sqm",
-  },
-  {
-    label: (
-      <span>
-        평
-      </span>
-    ),
-    value: "pyeong",
-  },
+const options: { label: string; value: "sqm" | "pyeong" }[] = [
+  { label: "㎡", value: "sqm" },
+  { label: "평", value: "pyeong" },
 ];
 
 export default function AreaToggle({ value, onChange }: Props) {
+  const nextValue = value === "sqm" ? "pyeong" : "sqm";
   return (
-    <div className={styles.areaToggle}>
-      <div className={styles.areaToggleLabel}>
-        <IconRulerMeasure size={14} />
-        <span>면적 단위</span>
-      </div>
-      <SegmentedControl
-        value={value}
-        onChange={(val) => onChange(val as AreaUnit)}
-        data={segments}
-        size="xs"
-        radius="xl"
-        className={styles.areaSegment}
-      />
-    </div>
+    <button
+      type="button"
+      aria-label="면적 단위 변경"
+      onClick={() => onChange(nextValue)}
+    >
+      {options
+        .map((option) => `${option.label}${option.value === value ? "" : ""}`)
+        .join(" ")}
+    </button>
   );
 }
